@@ -1,0 +1,59 @@
+<svg
+  width="960"
+  height="280"
+  viewBox="0 0 960 280"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <linearGradient id="fliggyGold" x1="86" y1="34" x2="392" y2="232" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFC92D" />
+      <stop offset="1" stop-color="#FFB100" />
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(24 12)">
+    <path
+      d="M76 74C110 36 164 18 229 18H398C405 18 411 24 409 32L395 103H437C444 103 449 109 447 116L432 176C423 213 398 246 362 267C325 288 279 298 225 298C131 298 55 247 28 172C14 132 18 100 34 77C45 61 59 48 76 74Z"
+      fill="url(#fliggyGold)"
+      transform="translate(0 -24)"
+    />
+    <path
+      d="M83 143C83 88 123 51 186 33C206 27 226 24 248 24H393C401 24 406 31 404 39C392 87 376 119 355 138H392C400 138 405 145 403 152C387 210 343 248 278 267C259 273 238 276 216 276C132 276 71 223 71 149C71 147 71 145 71 143C71 143 78 143 83 143Z"
+      fill="url(#fliggyGold)"
+      transform="translate(0 -24)"
+    />
+    <path
+      d="M116 112C145 82 188 64 241 64H365C372 64 377 70 375 77C360 133 331 174 287 198L281 249C277 297 239 330 179 330C107 330 51 281 51 214C51 171 71 136 116 112Z"
+      fill="white"
+      transform="translate(0 -74)"
+    />
+    <path
+      d="M116 112C145 82 188 64 241 64H365C372 64 377 70 375 77C360 133 331 174 287 198L281 249C277 297 239 330 179 330C107 330 51 281 51 214C51 171 71 136 116 112Z"
+      stroke="#404145"
+      stroke-width="18"
+      stroke-linejoin="round"
+      transform="translate(0 -74)"
+    />
+    <circle cx="148" cy="126" r="12" fill="#414246" />
+    <circle cx="277" cy="126" r="12" fill="#414246" />
+    <rect x="189" y="146" width="104" height="74" rx="34" fill="#F04C5C" />
+    <circle cx="226" cy="183" r="10" fill="#5A3941" />
+    <circle cx="258" cy="183" r="10" fill="#5A3941" />
+  </g>
+
+  <g transform="translate(510 188) skewX(-10)">
+    <text
+      x="0"
+      y="0"
+      fill="#404145"
+      font-family="'PingFang SC','Hiragino Sans GB','Noto Sans SC','Microsoft YaHei',sans-serif"
+      font-size="132"
+      font-style="italic"
+      font-weight="900"
+      letter-spacing="-14"
+    >
+      飞猪
+    </text>
+  </g>
+</svg>
