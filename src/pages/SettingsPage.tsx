@@ -55,14 +55,14 @@ const permissionRows = [
 ]
 
 export function SettingsPage() {
-  const { role } = useDemo()
+  const { role, setRole } = useDemo()
 
   return (
     <div className="page-stack">
       <PageHeader
         eyebrow="系统设置"
         title="品牌信息与权限共管"
-        description="统一查看品牌信息、合作模式与角色分工，明确平台与商家在经营流程中的职责边界。"
+        description="统一查看品牌信息、合作模式与角色分工，明确平台与商家在智能经营流程中的职责边界。"
       />
 
       <section className="two-column-grid">
@@ -75,7 +75,9 @@ export function SettingsPage() {
             </div>
             <div>
               <span className="detail-label">平台定位</span>
-              <p>{brandProfile.platformName}{brandProfile.proposition}</p>
+              <p>
+                {brandProfile.platformName} · {brandProfile.proposition}
+              </p>
             </div>
             <div>
               <span className="detail-label">当前合作模式</span>
@@ -86,6 +88,20 @@ export function SettingsPage() {
 
         <article className="card narrative-card">
           <PanelTitle title="当前角色职责" helper="不同角色对应不同经营职责与发布权限，确保平台与商家协同有序。" />
+          <div className="field">
+            <span>角色切换</span>
+            <select
+              aria-label="角色切换"
+              value={role}
+              onChange={(event) => setRole(event.target.value as typeof role)}
+            >
+              {Object.entries(roleMeta).map(([key, value]) => (
+                <option key={key} value={key}>
+                  {value.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="narrative-block">
             <strong>{roleMeta[role].label}</strong>
             <p>{roleMeta[role].description}</p>

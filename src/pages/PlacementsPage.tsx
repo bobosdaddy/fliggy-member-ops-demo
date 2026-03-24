@@ -22,7 +22,7 @@ function buildPlacementDraft(
 
   return {
     activityId: firstMount?.activityId ?? firstActivity?.id ?? '',
-    audience: firstMount?.audience ?? firstActivity?.segment ?? 'guest',
+    audience: firstMount?.audience ?? firstActivity?.previewSegment ?? 'guest',
     enabled: firstMount?.enabled ?? true,
     version: firstMount?.version ?? firstActivity?.title ?? '默认展示版本',
   }
@@ -43,7 +43,7 @@ export function PlacementsPage() {
       <PageHeader
         eyebrow="触点管理"
         title="飞猪阵地触点配置"
-        description="把活动挂到店铺首页、详情页、会员中心和订单完成页，让配置真正作用于前台体验。"
+        description="把模板活动和营销活动挂到店铺首页、详情页、会员中心和订单完成页，让配置真正作用于前台体验。"
       />
 
       <section className="placement-card-grid">
@@ -94,7 +94,7 @@ export function PlacementsPage() {
                   const nextActivity = activitiesById[event.target.value]
                   setDraft({
                     activityId: event.target.value,
-                    audience: nextActivity?.segment ?? draft.audience,
+                    audience: nextActivity?.previewSegment ?? draft.audience,
                     enabled: draft.enabled,
                     version: nextActivity?.title ?? draft.version,
                   })
@@ -159,7 +159,7 @@ export function PlacementsPage() {
         <article className="card">
           <PanelTitle
             title="当前已挂载活动"
-            helper="查看当前触点已挂载的活动版本、适用人群与运行状态。"
+            helper="查看当前触点已挂载的模板活动与营销活动版本、适用人群和运行状态。"
           />
           <div className="mounted-list">
             {activePlacementConfig.mounts.map((mount) => {

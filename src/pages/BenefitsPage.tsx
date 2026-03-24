@@ -25,7 +25,7 @@ export function BenefitsPage() {
       <PageHeader
         eyebrow="权益展示"
         title="会员权益配置台"
-        description="按会员身份配置不同前台展示内容，并统一管理品牌会员权益表达。"
+        description="按会员身份配置第二官网式的权益表达，并统一管理品牌会员在飞猪前台看到的内容。"
         actions={
           <div className="header-actions-row">
             <span className="meta-chip">上次保存 {benefits[activeSegment].updatedAt}</span>
@@ -129,7 +129,7 @@ export function BenefitsPage() {
         <article className="card preview-card">
           <PanelTitle
             title="当前展示效果"
-            helper="展示当前会员身份在前台看到的权益模块，便于统一校准权益表达与品牌呈现。"
+            helper="展示当前会员身份在飞猪前台看到的权益模块，便于统一校准权益表达与品牌呈现。"
           />
 
           <div className="front-preview">

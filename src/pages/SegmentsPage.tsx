@@ -1,8 +1,12 @@
 import { useState } from 'react'
-import { audienceInsights, segmentMeta } from '../data/mockData'
-import type { Segment } from '../app/types'
 import { PageHeader } from '../components/PageHeader'
 import { PanelTitle, SegmentBadge } from '../components/Primitives'
+import {
+  audienceInsights,
+  opportunityPools,
+  segmentMeta,
+} from '../data/mockData'
+import type { Segment } from '../app/types'
 
 export function SegmentsPage() {
   const [activeSegment, setActiveSegment] = useState<Segment>('guest')
@@ -12,8 +16,8 @@ export function SegmentsPage() {
     <div className="page-stack">
       <PageHeader
         eyebrow="会员身份"
-        title="会员身份分层经营"
-        description="将飞猪渠道内的品牌会员按身份状态拆分，明确不同经营目标、展示策略和推荐动作。"
+        title="会员身份与经营分层"
+        description="将飞猪渠道内品牌会员按身份状态拆分，明确不同经营目标、默认展示策略与推荐动作。"
       />
 
       <section className="segment-grid">
@@ -72,21 +76,28 @@ export function SegmentsPage() {
                 ))}
               </div>
             </div>
+            <div>
+              <span className="detail-label">高潜提示</span>
+              <p>{current.highPotentialHint}</p>
+            </div>
           </div>
         </article>
 
         <article className="card narrative-card">
           <PanelTitle
-            title="当前主要经营目标"
-            helper="不同会员阶段对应不同经营动作，确保资源投放与权益表达更精准。"
+            title="高潜经营池"
+            helper="补充观察激活、升级和保级的重点机会人群，帮助运营快速识别优先动作。"
           />
-          <div className="narrative-block">
-            <strong>{current.goal}</strong>
-            <p>{current.strategy}</p>
-          </div>
-          <div className="narrative-block">
-            <span className="detail-label">推荐动作</span>
-            <p>{current.recommendation}</p>
+          <div className="segment-stack">
+            {opportunityPools.map((pool) => (
+              <div className="segment-card-inline" key={pool.label}>
+                <div>
+                  <span className="detail-label">{pool.label}</span>
+                  <strong>{pool.value}</strong>
+                  <p>{pool.helper}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </article>
       </section>

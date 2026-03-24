@@ -4,8 +4,8 @@ import type {
   ActivityAction,
   BenefitConfig,
   CampaignFormValues,
-  Goal,
-  GoalAnalytics,
+  ChannelPlanDraft,
+  MarketingFormValues,
   PerformanceEntry,
   PlacementConfig,
   PlacementDraft,
@@ -14,6 +14,7 @@ import type {
   Segment,
   TemplateDefinition,
   ToastMessage,
+  MarketingPreset,
 } from './types'
 
 export interface DemoContextValue {
@@ -22,11 +23,13 @@ export interface DemoContextValue {
   benefits: Record<Segment, BenefitConfig>
   saveBenefits: (segment: Segment, next: Omit<BenefitConfig, 'updatedAt'>) => void
   templates: TemplateDefinition[]
+  marketingPresets: MarketingPreset[]
   activities: Activity[]
   createActivity: (values: CampaignFormValues, action: ActivityAction) => string
+  createMarketingActivity: (values: MarketingFormValues, action: ActivityAction) => string
+  updateActivityChannels: (draft: ChannelPlanDraft) => void
   placements: Record<PlacementKey, PlacementConfig>
   configurePlacement: (placementKey: PlacementKey, draft: PlacementDraft) => void
-  analytics: Record<Goal, GoalAnalytics>
   performance: Record<string, PerformanceEntry>
   toasts: ToastMessage[]
 }

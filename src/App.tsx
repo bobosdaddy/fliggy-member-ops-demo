@@ -4,7 +4,10 @@ import { Shell } from './components/Shell'
 import { AnalyticsPage } from './pages/AnalyticsPage'
 import { BenefitsPage } from './pages/BenefitsPage'
 import { CampaignBuilderPage } from './pages/CampaignBuilderPage'
+import { ChannelsPage } from './pages/ChannelsPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { MarketingActivitiesPage } from './pages/MarketingActivitiesPage'
+import { MarketingBuilderPage } from './pages/MarketingBuilderPage'
 import { PlacementsPage } from './pages/PlacementsPage'
 import { PreviewPage } from './pages/PreviewPage'
 import { SegmentsPage } from './pages/SegmentsPage'
@@ -23,6 +26,9 @@ function App() {
             <Route path="/benefits" element={<BenefitsPage />} />
             <Route path="/templates" element={<TemplatesPage />} />
             <Route path="/campaigns/new" element={<CampaignBuilderPage />} />
+            <Route path="/marketing" element={<MarketingActivitiesPage />} />
+            <Route path="/marketing/new" element={<MarketingBuilderPage />} />
+            <Route path="/channels" element={<ChannelsPage />} />
             <Route path="/placements" element={<PlacementsPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
