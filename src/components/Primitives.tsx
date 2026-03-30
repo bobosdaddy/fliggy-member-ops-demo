@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { budgetStatusMeta, goalMeta, segmentMeta, statusMeta } from '../data/mockData'
-import type { ActivityStatus, BudgetStatus, Goal, Segment } from '../app/types'
+import { goalMeta, segmentMeta, statusMeta } from '../data/mockData'
+import type { ActivityStatus, Goal, Segment } from '../app/types'
 
 export function MetricCard({
   label,
@@ -32,14 +32,6 @@ export function StatusPill({ status }: { status: ActivityStatus }) {
   return (
     <span className={`status-pill ${statusMeta[status].tone}`}>
       {statusMeta[status].label}
-    </span>
-  )
-}
-
-export function BudgetStatusPill({ status }: { status: BudgetStatus }) {
-  return (
-    <span className={`status-pill ${budgetStatusMeta[status].tone}`}>
-      {budgetStatusMeta[status].label}
     </span>
   )
 }
