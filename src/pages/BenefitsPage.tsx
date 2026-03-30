@@ -7,8 +7,8 @@ import { ActionLink, PanelTitle, SegmentBadge } from '../components/Primitives'
 
 export function BenefitsPage() {
   const { benefits, saveBenefits } = useDemo()
-  const [activeSegment, setActiveSegment] = useState<Segment>('guest')
-  const [draft, setDraft] = useState<BenefitConfig>(benefits.guest)
+  const [activeSegment, setActiveSegment] = useState<Segment>('lapsed')
+  const [draft, setDraft] = useState<BenefitConfig>(benefits.lapsed)
 
   useEffect(() => {
     setDraft(benefits[activeSegment])
@@ -23,9 +23,9 @@ export function BenefitsPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="权益展示"
+        eyebrow="权益配置"
         title="会员权益配置台"
-        description="按会员身份配置第二官网式的权益表达，并统一管理品牌会员在飞猪前台看到的内容。"
+        description="按人群配置专属权益内容，促进不同场景下的最终转化。"
         actions={
           <div className="header-actions-row">
             <span className="meta-chip">上次保存 {benefits[activeSegment].updatedAt}</span>
@@ -64,8 +64,8 @@ export function BenefitsPage() {
       <section className="split-layout">
         <article className="card form-card">
           <PanelTitle
-            title={`${segmentMeta[activeSegment].label}文案配置`}
-            helper="统一维护标题、CTA 与权益卡内容，确保不同身份用户看到的表达一致且准确。"
+            title={`${segmentMeta[activeSegment].label}权益配置`}
+            helper="统一维护标题、CTA 与权益卡内容，确保不同人群看到的权益表达一致且准确。"
           />
 
           <div className="form-grid">
@@ -73,7 +73,7 @@ export function BenefitsPage() {
               <span>主标题</span>
               <input
                 value={draft.title}
-                onChange={(event) => setDraft({ ...draft, title: event.target.value })}
+                onChange={(e) => setDraft({ ...draft, title: e.target.value })}
               />
             </label>
 
@@ -82,7 +82,7 @@ export function BenefitsPage() {
               <textarea
                 rows={3}
                 value={draft.subtitle}
-                onChange={(event) => setDraft({ ...draft, subtitle: event.target.value })}
+                onChange={(e) => setDraft({ ...draft, subtitle: e.target.value })}
               />
             </label>
 
@@ -90,14 +90,14 @@ export function BenefitsPage() {
               <span>CTA 按钮文案</span>
               <input
                 value={draft.cta}
-                onChange={(event) => setDraft({ ...draft, cta: event.target.value })}
+                onChange={(e) => setDraft({ ...draft, cta: e.target.value })}
               />
             </label>
 
             {draft.benefitCards.map((card, index) => (
               <label className="field" key={`${activeSegment}-card-${index}`}>
                 <span>{`权益卡片 ${index + 1}`}</span>
-                <input value={card} onChange={(event) => updateCard(index, event.target.value)} />
+                <input value={card} onChange={(e) => updateCard(index, e.target.value)} />
               </label>
             ))}
 
@@ -108,16 +108,16 @@ export function BenefitsPage() {
                   <textarea
                     rows={3}
                     value={draft.tierNote ?? ''}
-                    onChange={(event) => setDraft({ ...draft, tierNote: event.target.value })}
+                    onChange={(e) => setDraft({ ...draft, tierNote: e.target.value })}
                   />
                 </label>
                 <label className="field">
-                  <span>{activeSegment === 'silver' ? '下一等级激励' : '保级进度提示'}</span>
+                  <span>{activeSegment === 'silver' ? '升级激励提示' : '保级进度提示'}</span>
                   <textarea
                     rows={3}
                     value={draft.progressNote ?? ''}
-                    onChange={(event) =>
-                      setDraft({ ...draft, progressNote: event.target.value })
+                    onChange={(e) =>
+                      setDraft({ ...draft, progressNote: e.target.value })
                     }
                   />
                 </label>
@@ -129,7 +129,7 @@ export function BenefitsPage() {
         <article className="card preview-card">
           <PanelTitle
             title="当前展示效果"
-            helper="展示当前会员身份在飞猪前台看到的权益模块，便于统一校准权益表达与品牌呈现。"
+            helper="展示当前人群在前台看到的权益模块，便于统一校准权益表达与品牌呈现。"
           />
 
           <div className="front-preview">
@@ -147,7 +147,7 @@ export function BenefitsPage() {
             <div className="benefit-card-list">
               {draft.benefitCards.map((benefit) => (
                 <div className="benefit-item" key={benefit}>
-                  <span className="eyebrow">会员礼遇</span>
+                  <span className="eyebrow">会员权益</span>
                   <strong>{benefit}</strong>
                 </div>
               ))}

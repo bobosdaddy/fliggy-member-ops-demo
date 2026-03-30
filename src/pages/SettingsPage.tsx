@@ -6,63 +6,39 @@ import { PanelTitle } from '../components/Primitives'
 const permissionRows = [
   {
     label: '查看数据',
-    roles: {
-      platformOps: '可用',
-      merchantAdmin: '可用',
-      merchantOperator: '可用',
-    },
+    roles: { platformOps: '可用', merchantAdmin: '可用', merchantOperator: '可用' },
   },
   {
-    label: '创建活动',
-    roles: {
-      platformOps: '可用',
-      merchantAdmin: '可用',
-      merchantOperator: '可用',
-    },
+    label: '创建策略',
+    roles: { platformOps: '可用', merchantAdmin: '可用', merchantOperator: '可用' },
   },
   {
     label: '编辑权益',
-    roles: {
-      platformOps: '可用',
-      merchantAdmin: '可用',
-      merchantOperator: '可用',
-    },
+    roles: { platformOps: '可用', merchantAdmin: '可用', merchantOperator: '可用' },
   },
   {
     label: '提交审核',
-    roles: {
-      platformOps: '可用',
-      merchantAdmin: '可用',
-      merchantOperator: '受限',
-    },
+    roles: { platformOps: '可用', merchantAdmin: '可用', merchantOperator: '受限' },
   },
   {
-    label: '发布活动',
-    roles: {
-      platformOps: '可用',
-      merchantAdmin: '可用',
-      merchantOperator: '受限',
-    },
+    label: '发布策略',
+    roles: { platformOps: '可用', merchantAdmin: '可用', merchantOperator: '受限' },
   },
   {
-    label: '下线活动',
-    roles: {
-      platformOps: '可用',
-      merchantAdmin: '可用',
-      merchantOperator: '受限',
-    },
+    label: '下线策略',
+    roles: { platformOps: '可用', merchantAdmin: '可用', merchantOperator: '受限' },
   },
 ]
 
 export function SettingsPage() {
-  const { role, setRole } = useDemo()
+  const { role } = useDemo()
 
   return (
     <div className="page-stack">
       <PageHeader
         eyebrow="系统设置"
         title="品牌信息与权限共管"
-        description="统一查看品牌信息、合作模式与角色分工，明确平台与商家在智能经营流程中的职责边界。"
+        description="统一查看品牌信息、合作模式与角色分工，明确平台与商家在运营流程中的职责边界。"
       />
 
       <section className="two-column-grid">
@@ -75,9 +51,7 @@ export function SettingsPage() {
             </div>
             <div>
               <span className="detail-label">平台定位</span>
-              <p>
-                {brandProfile.platformName} · {brandProfile.proposition}
-              </p>
+              <p>{brandProfile.platformName}{brandProfile.proposition}</p>
             </div>
             <div>
               <span className="detail-label">当前合作模式</span>
@@ -87,21 +61,7 @@ export function SettingsPage() {
         </article>
 
         <article className="card narrative-card">
-          <PanelTitle title="当前角色职责" helper="不同角色对应不同经营职责与发布权限，确保平台与商家协同有序。" />
-          <div className="field">
-            <span>角色切换</span>
-            <select
-              aria-label="角色切换"
-              value={role}
-              onChange={(event) => setRole(event.target.value as typeof role)}
-            >
-              {Object.entries(roleMeta).map(([key, value]) => (
-                <option key={key} value={key}>
-                  {value.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <PanelTitle title="当前角色职责" helper="不同角色对应不同运营职责与发布权限，确保平台与商家协同有序。" />
           <div className="narrative-block">
             <strong>{roleMeta[role].label}</strong>
             <p>{roleMeta[role].description}</p>
@@ -111,7 +71,7 @@ export function SettingsPage() {
             {role === 'merchantAdmin' ? (
               <>
                 <span className="action-button secondary">提交审核</span>
-                <span className="action-button primary">发布</span>
+                <span className="action-button primary">发布策略</span>
               </>
             ) : null}
             {role === 'platformOps' ? <span className="action-button primary">审核并发布</span> : null}
@@ -120,7 +80,7 @@ export function SettingsPage() {
       </section>
 
       <article className="card">
-        <PanelTitle title="权限矩阵" helper="统一管理查看、创建、编辑、审核、发布与下线等关键经营权限。" />
+        <PanelTitle title="权限矩阵" helper="统一管理查看、创建、编辑、审核、发布与下线等关键运营权限。" />
         <table className="data-table">
           <thead>
             <tr>

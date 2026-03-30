@@ -1,47 +1,39 @@
 import { useState } from 'react'
 import { useDemo } from '../app/useDemo'
-import type { PlacementKey, PreviewMode, Segment } from '../app/types'
-import { PageHeader } from '../components/PageHeader'
-import { BudgetStatusPill, GoalBadge, PanelTitle, SegmentBadge, StatusPill } from '../components/Primitives'
+import type { ChannelKey, Segment } from '../app/types'
 import {
-  placementMeta,
-  placementOrder,
+  channelMeta,
   segmentMeta,
   segmentOrder,
+  touchpointKeys,
 } from '../data/mockData'
+import { PageHeader } from '../components/PageHeader'
+import { GoalBadge, PanelTitle, SegmentBadge, StatusPill } from '../components/Primitives'
 
 export function PreviewPage() {
-  const { benefits, activities, placements } = useDemo()
-  const [activeSegment, setActiveSegment] = useState<Segment>('guest')
-  const [activePlacement, setActivePlacement] = useState<PlacementKey>('store')
-  const [previewMode, setPreviewMode] = useState<PreviewMode>('template')
+  const { benefits, activities } = useDemo()
+  const [activeSegment, setActiveSegment] = useState<Segment>('lapsed')
+  const [activeTouchpoint, setActiveTouchpoint] = useState<ChannelKey>('store')
 
   const benefit = benefits[activeSegment]
-  const activitiesById = Object.fromEntries(activities.map((activity) => [activity.id, activity]))
-  const mountedActivities = placements[activePlacement].mounts
-    .filter((mount) => mount.enabled && mount.audience === activeSegment)
-    .map((mount) => ({
-      mount,
-      activity: activitiesById[mount.activityId],
-    }))
-    .filter((item) => item.activity)
-    .filter((item) =>
-      previewMode === 'template'
-        ? item.activity.kind === 'template'
-        : item.activity.kind === 'marketing',
-    )
+  const matchedActivities = activities.filter(
+    (a) =>
+      a.status === 'running' &&
+      a.segment === activeSegment &&
+      a.channels.includes(activeTouchpoint),
+  )
 
   return (
     <div className="page-stack">
       <PageHeader
         eyebrow="前台预览"
         title="品牌会员前台体验"
-        description="切换会员身份、触点和活动模式，查看后台配置如何作用到飞猪前台的会员经营表达。"
+        description="切换不同会员人群和触点，查看当前前台展示内容与活动承接方式。"
       />
 
       <section className="preview-controls">
         <div className="control-group">
-          <span className="detail-label">用户身份</span>
+          <span className="detail-label">用户人群</span>
           <div className="tab-row compact">
             {segmentOrder.map((segment) => (
               <button
@@ -58,31 +50,13 @@ export function PreviewPage() {
         <div className="control-group">
           <span className="detail-label">触点切换</span>
           <div className="tab-row compact">
-            {placementOrder.map((placement) => (
+            {touchpointKeys.map((tp) => (
               <button
-                className={placement === activePlacement ? 'tab-button active' : 'tab-button'}
-                key={placement}
-                onClick={() => setActivePlacement(placement)}
+                className={tp === activeTouchpoint ? 'tab-button active' : 'tab-button'}
+                key={tp}
+                onClick={() => setActiveTouchpoint(tp)}
               >
-                {placementMeta[placement].label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="control-group">
-          <span className="detail-label">活动模式</span>
-          <div className="tab-row compact">
-            {[
-              { key: 'template', label: '基础模板模式' },
-              { key: 'marketing', label: '营销加码模式' },
-            ].map((item) => (
-              <button
-                className={item.key === previewMode ? 'tab-button active' : 'tab-button'}
-                key={item.key}
-                onClick={() => setPreviewMode(item.key as PreviewMode)}
-              >
-                {item.label}
+                {channelMeta[tp].label}
               </button>
             ))}
           </div>
@@ -93,29 +67,25 @@ export function PreviewPage() {
         <article className="card narrative-card">
           <PanelTitle
             title="当前用户视角"
-            helper="统一查看当前会员身份、触点与活动模式下的前台呈现，校准权益表达和加码节奏。"
+            helper="统一查看不同人群与触点组合下的前台呈现，校准权益表达和策略承接。"
           />
           <div className="detail-list">
             <div>
-              <span className="detail-label">会员身份</span>
+              <span className="detail-label">会员人群</span>
               <p>{segmentMeta[activeSegment].label}</p>
             </div>
             <div>
               <span className="detail-label">当前触点</span>
-              <p>{placementMeta[activePlacement].label}</p>
+              <p>{channelMeta[activeTouchpoint].label}</p>
             </div>
             <div>
-              <span className="detail-label">展示模式</span>
-              <p>{previewMode === 'template' ? '基础模板模式' : '营销加码模式'}</p>
-            </div>
-            <div>
-              <span className="detail-label">默认触点策略</span>
-              <p>{placements[activePlacement].defaultStrategy}</p>
+              <span className="detail-label">触点说明</span>
+              <p>{channelMeta[activeTouchpoint].description}</p>
             </div>
           </div>
         </article>
 
-        <article className={previewMode === 'marketing' ? 'front-stage boosted' : 'front-stage'}>
+        <article className="front-stage">
           <div className="stage-header">
             <div>
               <span className="eyebrow">飞猪前台</span>
@@ -124,17 +94,12 @@ export function PreviewPage() {
             <SegmentBadge segment={activeSegment} />
           </div>
 
-          <div className={previewMode === 'marketing' ? 'preview-banner stage-banner boost' : 'preview-banner stage-banner'}>
+          <div className="preview-banner stage-banner">
             <div>
-              {previewMode === 'marketing' ? (
-                <span className="meta-chip highlight">限时加码中</span>
-              ) : null}
               <h2>{benefit.title}</h2>
               <p>{benefit.subtitle}</p>
             </div>
-            <span className="action-button primary">
-              {previewMode === 'marketing' ? '立即抢订' : benefit.cta}
-            </span>
+            <span className="action-button primary">{benefit.cta}</span>
           </div>
 
           <div className="benefit-card-list">
@@ -161,52 +126,34 @@ export function PreviewPage() {
           ) : null}
 
           <div className="front-activity-list">
-            {mountedActivities.length > 0 ? (
-              mountedActivities.map(({ mount, activity }) => (
-                <div
-                  className={
-                    previewMode === 'marketing'
-                      ? 'front-activity-card marketing'
-                      : 'front-activity-card'
-                  }
-                  key={mount.id}
-                >
+            {matchedActivities.length > 0 ? (
+              matchedActivities.map((activity) => (
+                <div className="front-activity-card" key={activity.id}>
                   <div className="mounted-item-head">
                     <div className="inline-token-row">
                       <GoalBadge goal={activity.goal} />
-                      <span className="meta-chip">
-                        {previewMode === 'marketing' ? activity.activityTypeLabel : placementMeta[activePlacement].label}
-                      </span>
+                      <span className="meta-chip">{channelMeta[activeTouchpoint].label}</span>
                     </div>
-                    <div className="inline-token-row">
-                      <StatusPill status={activity.status} />
-                      <BudgetStatusPill status={activity.budgetStatus} />
-                    </div>
+                    <StatusPill status={activity.status} />
                   </div>
                   <h3>{activity.title}</h3>
                   <p>{activity.subtitle}</p>
+                  {activity.landingHighlights && activity.landingHighlights.length > 0 && (
+                    <div className="inline-token-row" style={{ marginTop: '0.5rem' }}>
+                      {activity.landingHighlights.map((hl) => (
+                        <span className="subtle-badge" key={hl}>{hl}</span>
+                      ))}
+                    </div>
+                  )}
                   <div className="front-activity-footer">
-                    <span className="action-button secondary">
-                      {previewMode === 'marketing' ? activity.cta : activity.cta}
-                    </span>
-                    <span className="meta-chip">
-                      {previewMode === 'marketing' ? activity.estimatedLift : mount.version}
-                    </span>
+                    <span className="action-button secondary">{activity.cta}</span>
                   </div>
                 </div>
               ))
             ) : (
               <div className="empty-state">
-                <strong>
-                  {previewMode === 'marketing'
-                    ? '当前触点暂无营销加码版本'
-                    : '当前触点未配置模板活动版本'}
-                </strong>
-                <p>
-                  {previewMode === 'marketing'
-                    ? '系统将继续展示基础权益内容，可切回基础模板模式查看常态承接版本。'
-                    : '系统将按默认权益策略展示当前会员身份的基础内容。'}
-                </p>
+                <strong>当前触点暂无匹配策略</strong>
+                <p>该人群在此触点未配置运营策略，将展示默认权益内容。</p>
               </div>
             )}
           </div>

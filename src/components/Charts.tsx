@@ -5,7 +5,7 @@ export function Sparkline({
   tone = 'amber',
 }: {
   data: number[]
-  tone?: 'amber' | 'teal' | 'blue' | 'rose'
+  tone?: 'amber' | 'teal' | 'blue' | 'rose' | 'violet'
 }) {
   const max = Math.max(...data)
   const min = Math.min(...data)
