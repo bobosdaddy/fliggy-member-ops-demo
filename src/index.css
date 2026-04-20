@@ -1407,6 +1407,9 @@ h3 { font-size: 13px; font-weight: 600; }
 
 .wizard-section h3 { margin-bottom: 12px; }
 
+.wizard-section .field-textarea { max-width: 600px; }
+.wizard-section .form-row { max-width: 600px; }
+
 .wizard-hint {
   margin-bottom: 16px;
   font-size: 12px;
@@ -1811,9 +1814,9 @@ h3 { font-size: 13px; font-weight: 600; }
 .benefit-select-group h4 { margin-bottom: 8px; font-size: 13px; }
 
 .benefit-select-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .benefit-select-card {
@@ -2199,13 +2202,10 @@ h3 { font-size: 13px; font-weight: 600; }
   h1 { font-size: 22px; }
   .sparkline { height: 120px; }
   .phone-screen { width: 260px; }
-  /* ── Step 3 (权益配置·发布) 宽屏适配 ── */
-  .wizard-body { max-width: 1200px; }
-  .wizard-nav { max-width: 1200px; }
+  /* ── 宽屏适配：防止内容过度拉伸 ── */
   .strategy-summary-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
-  .benefit-select-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .wizard-section .field-textarea { max-width: 640px; }
-  .wizard-section .form-row { max-width: 640px; }
+  .benefit-select-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .creative-preview-grid { gap: 20px; max-width: 960px; }
   .publish-actions { max-width: 640px; }
 }
 
@@ -2270,6 +2270,7 @@ h3 { font-size: 13px; font-weight: 600; }
   .detail-grid, .split-layout, .preview-scene-grid,
   .template-grid, .narrative-grid { grid-template-columns: 1fr; }
   .creative-preview-grid { grid-template-columns: 1fr; }
+  .benefit-select-list { grid-template-columns: 1fr; }
   .stepper { flex-direction: column; }
 }
 
@@ -2278,7 +2279,7 @@ h3 { font-size: 13px; font-weight: 600; }
   .segment-grid, .placement-card-grid, .template-grid,
   .narrative-grid, .scenario-pick-grid, .channel-grid,
   .scenario-select-grid, .condition-grid, .scenario-grid,
-  .role-grid, .analytics-two-col {
+  .role-grid, .analytics-two-col, .benefit-select-list {
     grid-template-columns: 1fr;
   }
   .form-row, .multi-select-grid, .story-grid, .three-column-grid { grid-template-columns: 1fr; }
