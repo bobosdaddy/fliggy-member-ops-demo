@@ -1,199 +1,122 @@
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useDemo } from '../app/useDemo'
-import {
-  audienceInsights,
-  brandProfile,
-  channelMeta,
-  dashboardMetrics,
-  dashboardTrend,
-  quickTodos,
-} from '../data/mockData'
+import { dashboardMetrics, dashboardTrend, scenarioMeta, quickTodos } from '../data/mockData'
+import { MetricCard, ScenarioBadge, StatusPill, PanelTitle } from '../components/Primitives'
 import { Sparkline } from '../components/Charts'
 import { PageHeader } from '../components/PageHeader'
-import {
-  GoalBadge,
-  MetricCard,
-  PanelTitle,
-  SegmentBadge,
-  StatusPill,
-} from '../components/Primitives'
 
 export function DashboardPage() {
-  const { activities } = useDemo()
+  const { strategies, performance } = useDemo()
+  const nav = useNavigate()
 
-  const pendingActivities = activities.filter((a) => a.status !== 'running')
-  const todoItems = [
-    pendingActivities.length > 0
-      ? `${pendingActivities.length} 个策略待发布`
-      : quickTodos[0],
-    quickTodos[1],
-    quickTodos[2],
-  ]
+  const runningStrategies = strategies.filter((s) => s.status === 'running')
 
   return (
-    <div className="page-stack">
+    <>
       <PageHeader
-        eyebrow="工作台"
-        title="品牌会员智能运营工作台"
-        description="统一查看会员拉新、召回、升保级、浏览未购与营销活动的经营结果与进行中策略。"
-        actions={
-          <div className="header-actions-row">
-            <span className="meta-chip">统计周期：本月</span>
-            <Link className="action-button primary" to="/scenarios">
-              新建策略
-            </Link>
-            <Link className="action-button secondary" to="/benefits">
-              配置权益
-            </Link>
-            <Link className="action-button ghost" to="/analytics">
-              查看数据
-            </Link>
-          </div>
-        }
+        eyebrow="会员中心"
+        title="工作台"
+        description="品牌会员运营全景概览，掌握核心经营指标与策略执行情况。"
       />
 
-      <section className="hero-strip card">
-        <div>
-          <span className="eyebrow">品牌概览</span>
-          <h2>{brandProfile.brandName}</h2>
-          <p>
-            飞猪作为品牌第二官网，通过 AI 智能策略驱动会员拉新、召回、升保级、浏览未购转化与营销活动。
-          </p>
-        </div>
-        <div className="story-grid">
-          <div className="story-item">
-            <strong>128,600</strong>
-            <span>飞猪内可识别品牌会员</span>
-          </div>
-          <div className="story-item">
-            <strong>5 大</strong>
-            <span>智能运营场景持续运营</span>
-          </div>
-          <div className="story-item">
-            <strong>6 个</strong>
-            <span>触达渠道全面覆盖</span>
-          </div>
+      {/* 核心指标 */}
+      <section className="section">
+        <PanelTitle>核心指标</PanelTitle>
+        <div className="metric-grid">
+          {dashboardMetrics.map((m) => (
+            <MetricCard key={m.label} {...m} />
+          ))}
         </div>
       </section>
 
-      <section className="metric-grid">
-        {dashboardMetrics.map((metric) => (
-          <MetricCard key={metric.label} {...metric} />
-        ))}
+      {/* 运营趋势 */}
+      <section className="section">
+        <PanelTitle>运营趋势（近 7 日）</PanelTitle>
+        <Sparkline data={dashboardTrend} />
       </section>
 
-      <section className="two-column-grid">
-        <article className="card chart-card">
-          <PanelTitle
-            title="经营趋势概览"
-            helper="本周召回、转化与营销活动效果持续上升，AI 策略驱动效率提升。"
-          />
-          <Sparkline data={dashboardTrend} tone="amber" />
-          <div className="trend-footer">
-            <span>03.22</span>
-            <span>03.28</span>
-          </div>
-        </article>
+      {/* 运行中策略 */}
+      <section className="section">
+        <div className="section-header-row">
+          <PanelTitle>运行中策略</PanelTitle>
+          <button type="button" className="btn btn-primary" onClick={() => nav('/scenarios')}>
+            + 新建策略
+          </button>
+        </div>
 
-        <article className="card">
-          <PanelTitle
-            title="待办事项"
-            helper="聚焦近期待处理事项，保障策略发布与渠道投放持续推进。"
-          />
-          <div className="todo-list">
-            {todoItems.map((item) => (
-              <div className="todo-row" key={item}>
-                <span className="todo-dot" />
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
-        </article>
-      </section>
-
-      <section className="two-column-grid">
-        <article className="card">
-          <PanelTitle
-            title="进行中策略"
-            helper="统一查看当前策略的运营场景、运行状态、触达渠道与更新时间。"
-          />
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>策略名称</th>
-                <th>运营场景</th>
-                <th>状态</th>
-                <th>触达渠道</th>
-                <th>更新时间</th>
-              </tr>
-            </thead>
-            <tbody>
-              {activities.slice(0, 6).map((activity) => (
-                <tr key={activity.id}>
-                  <td>
-                    <div className="table-title">
-                      <strong>{activity.name}</strong>
-                      <span>{activity.title}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <GoalBadge goal={activity.goal} />
-                  </td>
-                  <td>
-                    <StatusPill status={activity.status} />
-                  </td>
-                  <td>
-                    <div className="inline-token-row">
-                      {activity.channels.slice(0, 3).map((ch) => (
-                        <span className="subtle-badge" key={`${activity.id}-${ch}`}>
-                          {channelMeta[ch].label}
-                        </span>
-                      ))}
-                      {activity.channels.length > 3 && (
-                        <span className="meta-chip">+{activity.channels.length - 3}</span>
-                      )}
-                    </div>
-                  </td>
-                  <td>{activity.updatedAt}</td>
+        {runningStrategies.length === 0 ? (
+          <p className="empty-hint">暂无运行中策略</p>
+        ) : (
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>策略名称</th>
+                  <th>场景</th>
+                  <th>状态</th>
+                  <th>曝光</th>
+                  <th>点击</th>
+                  <th>转化</th>
+                  <th>GMV</th>
+                  <th>更新时间</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </article>
-
-        <article className="card">
-          <PanelTitle
-            title="会员人群快照"
-            helper="不同会员人群对应不同运营场景与触达策略。"
-          />
-          <div className="segment-stack">
-            {audienceInsights.map((segment) => (
-              <div className="segment-card-inline" key={segment.key}>
-                <div>
-                  <div className="segment-inline-head">
-                    <SegmentBadge segment={segment.key} />
-                    <GoalBadge
-                      goal={
-                        segment.key === 'guest'
-                          ? 'acquisition'
-                          : segment.key === 'lapsed'
-                            ? 'recall'
-                            : segment.key === 'potential'
-                              ? 'browseNoBuy'
-                              : segment.key === 'silver'
-                                ? 'upgrade'
-                                : 'campaign'
-                      }
-                    />
-                  </div>
-                  <strong>{segment.scale.toLocaleString()}</strong>
-                  <p>{segment.recommendation}</p>
-                </div>
-              </div>
-            ))}
+              </thead>
+              <tbody>
+                {runningStrategies.map((s) => {
+                  const p = performance[s.id]
+                  return (
+                    <tr key={s.id}>
+                      <td className="cell-primary">{s.name}</td>
+                      <td><ScenarioBadge scenario={s.scenario} /></td>
+                      <td><StatusPill status={s.status} /></td>
+                      <td>{p?.exposure?.toLocaleString() ?? '-'}</td>
+                      <td>{p?.clicks?.toLocaleString() ?? '-'}</td>
+                      <td>{p?.conversions?.toLocaleString() ?? '-'}</td>
+                      <td>¥{((p?.gmv ?? 0) / 10000).toFixed(0)}万</td>
+                      <td className="cell-muted">{s.updatedAt}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
-        </article>
+        )}
       </section>
-    </div>
+
+      {/* 待办事项 */}
+      <section className="section">
+        <PanelTitle>待办提醒</PanelTitle>
+        <ul className="todo-list">
+          {quickTodos.map((t, i) => (
+            <li key={i} className="todo-item">
+              <span className="todo-dot" />
+              {t}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* 场景快捷入口 */}
+      <section className="section">
+        <PanelTitle>场景快捷入口</PanelTitle>
+        <div className="scenario-grid">
+          {Object.entries(scenarioMeta).map(([key, m]) => (
+            <button
+              key={key}
+              type="button"
+              className={`scenario-card tone-${m.tone}`}
+              onClick={() => nav('/scenarios')}
+            >
+              <span className="scenario-card-label">{m.label}</span>
+              <span className="scenario-card-cta">创建策略 →</span>
+            </button>
+          ))}
+          <div className="scenario-card coming-soon">
+            <span className="scenario-card-label">更多场景</span>
+            <span className="coming-soon-tag">敬请期待</span>
+          </div>
+        </div>
+      </section>
+    </>
   )
 }

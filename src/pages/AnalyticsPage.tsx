@@ -1,112 +1,202 @@
 import { useState } from 'react'
 import { useDemo } from '../app/useDemo'
-import type { Goal } from '../app/types'
-import { goalMeta, goalOrder } from '../data/mockData'
-import { ContributionBars, FunnelChart, Sparkline } from '../components/Charts'
+import type { ScenarioKey } from '../app/types'
+import { scenarioMeta, scenarioOrder, analyticsByScenario } from '../data/mockData'
 import { PageHeader } from '../components/PageHeader'
-import { GoalBadge, MetricCard, PanelTitle, StatusPill } from '../components/Primitives'
+import { MetricCard, ScenarioBadge, StatusPill, PanelTitle } from '../components/Primitives'
+import { Sparkline, FunnelChart, ContributionBars } from '../components/Charts'
 
-const formatCurrency = (value: number) => {
-  if (value >= 10000) {
-    return `¥${(value / 10000).toFixed(value % 10000 === 0 ? 0 : 1)}万`
-  }
-  return `¥${value.toLocaleString('zh-CN')}`
-}
+type ReportView = 'strategy' | 'scenario'
 
 export function AnalyticsPage() {
-  const { analytics, activities, performance } = useDemo()
-  const [activeGoal, setActiveGoal] = useState<Goal>('recall')
-  const currentAnalytics = analytics[activeGoal]
-  const rows = activities.filter((activity) => activity.goal === activeGoal)
+  const { strategies, performance } = useDemo()
+  const [view, setView] = useState<ReportView>('scenario')
+  const [selectedScenario, setSelectedScenario] = useState<ScenarioKey>('registration')
+  const [reportGenerated, setReportGenerated] = useState(false)
+  const [generating, setGenerating] = useState(false)
+
+  const scenarioData = analyticsByScenario[selectedScenario]
+
+  const handleGenerateReport = () => {
+    setGenerating(true)
+    setTimeout(() => {
+      setGenerating(false)
+      setReportGenerated(true)
+    }, 1200)
+  }
 
   return (
-    <div className="page-stack">
+    <>
       <PageHeader
-        eyebrow="数据分析"
-        title="会员经营结果看板"
-        description="围绕会员拉新、召回、升保级、浏览未购与营销活动，统一回收经营结果。"
+        eyebrow="会员中心"
+        title="数据分析"
+        description="按策略或按场景生成投放分析报告，一键导出。"
       />
 
-      <section className="tab-row">
-        {goalOrder.map((goal) => (
-          <button
-            className={goal === activeGoal ? 'tab-button active' : 'tab-button'}
-            key={goal}
-            onClick={() => setActiveGoal(goal)}
-          >
-            {goalMeta[goal].label}分析
-          </button>
-        ))}
-      </section>
+      {/* 视图切换 */}
+      <div className="analytics-view-tabs">
+        <button
+          type="button"
+          className={`analytics-view-tab ${view === 'scenario' ? 'active' : ''}`}
+          onClick={() => { setView('scenario'); setReportGenerated(false) }}
+        >
+          📊 按场景分析
+        </button>
+        <button
+          type="button"
+          className={`analytics-view-tab ${view === 'strategy' ? 'active' : ''}`}
+          onClick={() => { setView('strategy'); setReportGenerated(false) }}
+        >
+          📋 按策略分析
+        </button>
+      </div>
 
-      <section className="metric-grid compact">
-        {currentAnalytics.summary.map((metric) => (
-          <MetricCard key={metric.label} {...metric} />
-        ))}
-      </section>
+      {/* ── 按场景 ── */}
+      {view === 'scenario' && (
+        <>
+          <div className="scenario-tab-bar">
+            {scenarioOrder.map((key) => (
+              <button
+                key={key}
+                type="button"
+                className={`scenario-tab ${selectedScenario === key ? 'active' : ''}`}
+                onClick={() => { setSelectedScenario(key); setReportGenerated(false) }}
+              >
+                {scenarioMeta[key].label}
+              </button>
+            ))}
+          </div>
 
-      <section className="three-column-grid">
-        <article className="card chart-card">
-          <PanelTitle title="趋势表现" helper="观察不同场景下的周期变化，判断策略效果与资源投入。" />
-          <Sparkline data={currentAnalytics.trend} tone={goalMeta[activeGoal].tone as never} />
-        </article>
+          <div className="report-actions">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleGenerateReport}
+              disabled={generating}
+            >
+              {generating ? '生成中…' : '一键生成分析报告'}
+            </button>
+            {reportGenerated && (
+              <span className="badge tone-success">报告已生成</span>
+            )}
+          </div>
 
-        <article className="card">
-          <PanelTitle title="经营漏斗" helper="从触达、点击到转化逐层查看链路表现。" />
-          <FunnelChart steps={currentAnalytics.funnel} />
-        </article>
+          <section className="section">
+            <PanelTitle>{scenarioMeta[selectedScenario].label} · 投放概览</PanelTitle>
+            <div className="metric-grid">
+              {scenarioData.summary.map((m) => (
+                <MetricCard key={m.label} {...m} />
+              ))}
+            </div>
+          </section>
 
-        <article className="card">
-          <PanelTitle title="渠道贡献" helper="查看各触达渠道对转化的贡献占比。" />
-          <ContributionBars items={currentAnalytics.contributors} />
-        </article>
-      </section>
+          <section className="section">
+            <PanelTitle>转化趋势（近 7 日）</PanelTitle>
+            <Sparkline data={scenarioData.trend} />
+          </section>
 
-      <article className="card">
-        <PanelTitle
-          title="策略效果表"
-          helper="统一查看各策略在触达、点击、转化与 GMV 贡献上的经营表现。"
-          action={<GoalBadge goal={activeGoal} />}
-        />
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>策略名称</th>
-              <th>运营场景</th>
-              <th>状态</th>
-              <th>触达</th>
-              <th>点击</th>
-              <th>转化</th>
-              <th>GMV 贡献</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((activity) => {
-              const current = performance[activity.id]
-              return (
-                <tr key={activity.id}>
-                  <td>
-                    <div className="table-title">
-                      <strong>{activity.name}</strong>
-                      <span>{activity.title}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <GoalBadge goal={activity.goal} />
-                  </td>
-                  <td>
-                    <StatusPill status={activity.status} />
-                  </td>
-                  <td>{current?.exposure.toLocaleString() ?? '-'}</td>
-                  <td>{current?.clicks.toLocaleString() ?? '-'}</td>
-                  <td>{current?.conversions.toLocaleString() ?? '-'}</td>
-                  <td>{current ? formatCurrency(current.gmv) : '-'}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </article>
-    </div>
+          <div className="analytics-two-col">
+            <section className="section">
+              <PanelTitle>转化漏斗</PanelTitle>
+              <FunnelChart steps={scenarioData.funnel} />
+            </section>
+            <section className="section">
+              <PanelTitle>渠道贡献</PanelTitle>
+              <ContributionBars items={scenarioData.channelContribution} />
+            </section>
+          </div>
+
+          {reportGenerated && (
+            <section className="section report-summary">
+              <PanelTitle>📄 报告摘要</PanelTitle>
+              <div className="report-card">
+                <h4>{scenarioMeta[selectedScenario].label} 全量策略投放报告</h4>
+                <ul>
+                  <li>覆盖策略数：{strategies.filter((s) => s.scenario === selectedScenario).length} 条</li>
+                  <li>总曝光：{scenarioData.summary[1]?.value}</li>
+                  <li>总转化：{scenarioData.summary[2]?.value}</li>
+                  <li>GMV 贡献：{scenarioData.summary[3]?.value}</li>
+                </ul>
+                <button type="button" className="btn btn-outline btn-sm">下载完整报告</button>
+              </div>
+            </section>
+          )}
+        </>
+      )}
+
+      {/* ── 按策略 ── */}
+      {view === 'strategy' && (
+        <>
+          <div className="report-actions">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleGenerateReport}
+              disabled={generating}
+            >
+              {generating ? '生成中…' : '一键生成策略报告'}
+            </button>
+            {reportGenerated && (
+              <span className="badge tone-success">报告已生成</span>
+            )}
+          </div>
+
+          <section className="section">
+            <PanelTitle>全部策略投放数据</PanelTitle>
+            {strategies.length === 0 ? (
+              <p className="empty-hint">暂无策略数据</p>
+            ) : (
+              <div className="table-scroll">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>策略名称</th>
+                      <th>场景</th>
+                      <th>状态</th>
+                      <th>曝光</th>
+                      <th>点击</th>
+                      <th>转化</th>
+                      <th>GMV</th>
+                      <th>CTR</th>
+                      <th>CVR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {strategies.map((s) => {
+                      const p = performance[s.id]
+                      const ctr = p ? ((p.clicks / p.exposure) * 100).toFixed(1) + '%' : '-'
+                      const cvr = p ? ((p.conversions / p.clicks) * 100).toFixed(1) + '%' : '-'
+                      return (
+                        <tr key={s.id}>
+                          <td className="cell-primary">{s.name}</td>
+                          <td><ScenarioBadge scenario={s.scenario} /></td>
+                          <td><StatusPill status={s.status} /></td>
+                          <td>{p?.exposure?.toLocaleString() ?? '-'}</td>
+                          <td>{p?.clicks?.toLocaleString() ?? '-'}</td>
+                          <td>{p?.conversions?.toLocaleString() ?? '-'}</td>
+                          <td>¥{((p?.gmv ?? 0) / 10000).toFixed(0)}万</td>
+                          <td>{ctr}</td>
+                          <td>{cvr}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          {reportGenerated && (
+            <section className="section report-summary">
+              <PanelTitle>📄 单条策略报告</PanelTitle>
+              <div className="report-card">
+                <p>已为 {strategies.length} 条策略生成独立分析报告。</p>
+                <button type="button" className="btn btn-outline btn-sm">下载全部报告</button>
+              </div>
+            </section>
+          )}
+        </>
+      )}
+    </>
   )
 }

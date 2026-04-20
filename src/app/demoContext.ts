@@ -1,14 +1,13 @@
 import { createContext } from 'react'
 import type {
-  Activity,
   ActivityAction,
-  BenefitConfig,
-  Goal,
-  GoalAnalytics,
+  BenefitItem,
   PerformanceEntry,
   Role,
-  Segment,
+  ScenarioAnalytics,
   ScenarioDefinition,
+  ScenarioKey,
+  Strategy,
   StrategyFormValues,
   ToastMessage,
 } from './types'
@@ -16,12 +15,13 @@ import type {
 export interface DemoContextValue {
   role: Role
   setRole: (role: Role) => void
-  benefits: Record<Segment, BenefitConfig>
-  saveBenefits: (segment: Segment, next: Omit<BenefitConfig, 'updatedAt'>) => void
+  benefits: BenefitItem[]
+  toggleBenefit: (id: string) => void
+  updateBenefit: (id: string, patch: Partial<BenefitItem>) => void
   scenarios: ScenarioDefinition[]
-  activities: Activity[]
+  strategies: Strategy[]
   createStrategy: (values: StrategyFormValues, action: ActivityAction) => string
-  analytics: Record<Goal, GoalAnalytics>
+  analytics: Record<ScenarioKey, ScenarioAnalytics>
   performance: Record<string, PerformanceEntry>
   toasts: ToastMessage[]
 }

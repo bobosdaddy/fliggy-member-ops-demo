@@ -1,174 +1,111 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useDemo } from '../app/useDemo'
-import type { BenefitConfig, Segment } from '../app/types'
-import { segmentMeta, segmentOrder } from '../data/mockData'
+import { benefitCategoryMeta, benefitCategoryOrder } from '../data/mockData'
+import type { BenefitCategory } from '../app/types'
 import { PageHeader } from '../components/PageHeader'
-import { ActionLink, PanelTitle, SegmentBadge } from '../components/Primitives'
 
 export function BenefitsPage() {
-  const { benefits, saveBenefits } = useDemo()
-  const [activeSegment, setActiveSegment] = useState<Segment>('lapsed')
-  const [draft, setDraft] = useState<BenefitConfig>(benefits.lapsed)
+  const { benefits, toggleBenefit, updateBenefit } = useDemo()
+  const [activeTab, setActiveTab] = useState<BenefitCategory>('points')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editDesc, setEditDesc] = useState('')
 
-  useEffect(() => {
-    setDraft(benefits[activeSegment])
-  }, [activeSegment, benefits])
+  const filtered = benefits.filter((b) => b.category === activeTab)
 
-  const updateCard = (index: number, value: string) => {
-    const nextCards = [...draft.benefitCards]
-    nextCards[index] = value
-    setDraft({ ...draft, benefitCards: nextCards })
+  const startEdit = (id: string) => {
+    const b = benefits.find((x) => x.id === id)
+    if (!b) return
+    setEditingId(id)
+    setEditName(b.name)
+    setEditDesc(b.description)
+  }
+
+  const saveEdit = () => {
+    if (!editingId) return
+    updateBenefit(editingId, { name: editName, description: editDesc })
+    setEditingId(null)
   }
 
   return (
-    <div className="page-stack">
+    <>
       <PageHeader
-        eyebrow="权益配置"
-        title="会员权益配置台"
-        description="按人群配置专属权益内容，促进不同场景下的最终转化。"
-        actions={
-          <div className="header-actions-row">
-            <span className="meta-chip">上次保存 {benefits[activeSegment].updatedAt}</span>
-            <button
-              className="action-button primary"
-              onClick={() =>
-                saveBenefits(activeSegment, {
-                  segment: activeSegment,
-                  title: draft.title,
-                  subtitle: draft.subtitle,
-                  cta: draft.cta,
-                  benefitCards: draft.benefitCards,
-                  tierNote: draft.tierNote,
-                  progressNote: draft.progressNote,
-                })
-              }
-            >
-              保存配置
-            </button>
-          </div>
-        }
+        eyebrow="会员中心"
+        title="会员权益"
+        description="配置积分奖励、优惠券、会员身份与会员活动权益，关联到策略投放中。"
       />
 
-      <section className="tab-row">
-        {segmentOrder.map((segment) => (
+      {/* Tabs */}
+      <div className="benefit-tabs">
+        {benefitCategoryOrder.map((cat) => (
           <button
-            className={segment === activeSegment ? 'tab-button active' : 'tab-button'}
-            key={segment}
-            onClick={() => setActiveSegment(segment)}
+            key={cat}
+            type="button"
+            className={`benefit-tab ${activeTab === cat ? 'active' : ''}`}
+            onClick={() => { setActiveTab(cat); setEditingId(null) }}
           >
-            {segmentMeta[segment].label}
+            {benefitCategoryMeta[cat].icon} {benefitCategoryMeta[cat].label}
+            <span className="benefit-tab-count">
+              {benefits.filter((b) => b.category === cat).length}
+            </span>
           </button>
         ))}
-      </section>
+      </div>
 
-      <section className="split-layout">
-        <article className="card form-card">
-          <PanelTitle
-            title={`${segmentMeta[activeSegment].label}权益配置`}
-            helper="统一维护标题、CTA 与权益卡内容，确保不同人群看到的权益表达一致且准确。"
-          />
-
-          <div className="form-grid">
-            <label className="field">
-              <span>主标题</span>
-              <input
-                value={draft.title}
-                onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-              />
-            </label>
-
-            <label className="field">
-              <span>副标题</span>
-              <textarea
-                rows={3}
-                value={draft.subtitle}
-                onChange={(e) => setDraft({ ...draft, subtitle: e.target.value })}
-              />
-            </label>
-
-            <label className="field">
-              <span>CTA 按钮文案</span>
-              <input
-                value={draft.cta}
-                onChange={(e) => setDraft({ ...draft, cta: e.target.value })}
-              />
-            </label>
-
-            {draft.benefitCards.map((card, index) => (
-              <label className="field" key={`${activeSegment}-card-${index}`}>
-                <span>{`权益卡片 ${index + 1}`}</span>
-                <input value={card} onChange={(e) => updateCard(index, e.target.value)} />
-              </label>
-            ))}
-
-            {activeSegment === 'silver' || activeSegment === 'gold' ? (
-              <>
-                <label className="field">
-                  <span>当前等级权益说明</span>
-                  <textarea
-                    rows={3}
-                    value={draft.tierNote ?? ''}
-                    onChange={(e) => setDraft({ ...draft, tierNote: e.target.value })}
-                  />
-                </label>
-                <label className="field">
-                  <span>{activeSegment === 'silver' ? '升级激励提示' : '保级进度提示'}</span>
-                  <textarea
-                    rows={3}
-                    value={draft.progressNote ?? ''}
-                    onChange={(e) =>
-                      setDraft({ ...draft, progressNote: e.target.value })
-                    }
-                  />
-                </label>
-              </>
-            ) : null}
-          </div>
-        </article>
-
-        <article className="card preview-card">
-          <PanelTitle
-            title="当前展示效果"
-            helper="展示当前人群在前台看到的权益模块，便于统一校准权益表达与品牌呈现。"
-          />
-
-          <div className="front-preview">
-            <div className="preview-banner">
-              <div>
-                <SegmentBadge segment={activeSegment} />
-                <h2>{draft.title}</h2>
-                <p>{draft.subtitle}</p>
-              </div>
-              <ActionLink tone="primary" as="span">
-                {draft.cta}
-              </ActionLink>
-            </div>
-
-            <div className="benefit-card-list">
-              {draft.benefitCards.map((benefit) => (
-                <div className="benefit-item" key={benefit}>
-                  <span className="eyebrow">会员权益</span>
-                  <strong>{benefit}</strong>
+      {/* 权益列表 */}
+      <div className="benefit-list">
+        {filtered.length === 0 ? (
+          <p className="empty-hint">当前分类暂无权益配置</p>
+        ) : (
+          filtered.map((b) => (
+            <div key={b.id} className={`benefit-row ${b.enabled ? '' : 'disabled'}`}>
+              {editingId === b.id ? (
+                <div className="benefit-edit-form">
+                  <label className="field-label">
+                    权益名称
+                    <input
+                      className="field-input"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                    />
+                  </label>
+                  <label className="field-label">
+                    权益说明
+                    <textarea
+                      className="field-textarea"
+                      value={editDesc}
+                      onChange={(e) => setEditDesc(e.target.value)}
+                      rows={2}
+                    />
+                  </label>
+                  <div className="benefit-edit-actions">
+                    <button type="button" className="btn btn-primary btn-sm" onClick={saveEdit}>保存</button>
+                    <button type="button" className="btn btn-outline btn-sm" onClick={() => setEditingId(null)}>取消</button>
+                  </div>
                 </div>
-              ))}
+              ) : (
+                <>
+                  <div className="benefit-row-info">
+                    <strong>{b.name}</strong>
+                    {b.brand && <span className="benefit-brand">{b.brand}</span>}
+                    {b.value && <span className="benefit-value">{b.value}</span>}
+                    <p>{b.description}</p>
+                  </div>
+                  <div className="benefit-row-actions">
+                    <button type="button" className="btn btn-sm btn-outline" onClick={() => startEdit(b.id)}>
+                      编辑
+                    </button>
+                    <label className="toggle-switch">
+                      <input type="checkbox" checked={b.enabled} onChange={() => toggleBenefit(b.id)} />
+                      <span className="toggle-slider" />
+                    </label>
+                  </div>
+                </>
+              )}
             </div>
-
-            {draft.tierNote ? (
-              <div className="tier-note">
-                <strong>当前等级权益</strong>
-                <p>{draft.tierNote}</p>
-              </div>
-            ) : null}
-
-            {draft.progressNote ? (
-              <div className="tier-note accent">
-                <strong>{activeSegment === 'silver' ? '升级提醒' : '保级提醒'}</strong>
-                <p>{draft.progressNote}</p>
-              </div>
-            ) : null}
-          </div>
-        </article>
-      </section>
-    </div>
+          ))
+        )}
+      </div>
+    </>
   )
 }

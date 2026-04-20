@@ -1,601 +1,407 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useDemo } from '../app/useDemo'
-import type { ActivityAction, ChannelKey, ScenarioDefinition, StrategyFormValues } from '../app/types'
+import type {
+  AudienceCondition,
+  ChannelKey,
+  ScenarioKey,
+  StrategyFormValues,
+} from '../app/types'
 import {
+  scenarios,
+  conditionMeta,
+  conditionOrder,
   channelMeta,
   channelOrder,
-  roleMeta,
-  segmentMeta,
+  scenarioMeta,
+  initialBenefits,
+  benefitCategoryMeta,
+  benefitCategoryOrder,
 } from '../data/mockData'
 import { PageHeader } from '../components/PageHeader'
-import { GoalBadge, PanelTitle, SegmentBadge } from '../components/Primitives'
+import { ComingSoonCard } from '../components/Primitives'
 
-const stepLabels = [
-  '选择场景 · 一键生成',
-  'AI 人群策略 · 承接页',
-  '触达渠道选择',
-  '权益配置 · 发布',
-]
+const STEPS = ['选择场景 · AI 生成', '人群圈选 · 渠道选择', '素材配置', '权益配置 · 发布'] as const
 
-function buildInitialForm(scenario: ScenarioDefinition): StrategyFormValues {
-  const today = new Date()
-  const endDate = new Date(today)
-  endDate.setDate(endDate.getDate() + 30)
-  const fmt = (d: Date) => d.toISOString().slice(0, 10)
-
+function defaultForm(): StrategyFormValues {
   return {
-    scenarioId: scenario.id,
-    name: `${scenario.name} - ${segmentMeta[scenario.targetSegment].label}`,
-    goal: scenario.goal,
-    segment: scenario.targetSegment,
-    channels: [...scenario.recommendedChannels],
-    startDate: fmt(today),
-    endDate: fmt(endDate),
-    title: scenario.landingPage.title,
-    subtitle: scenario.landingPage.subtitle,
-    cta: scenario.landingPage.cta,
-    note: scenario.aiStrategy,
-    landingHighlights: [...scenario.landingPage.highlights],
-    benefits: [...scenario.defaultBenefits],
-    benefitTitle: scenario.defaultBenefitTitle,
-    benefitCta: scenario.defaultBenefitCta,
+    name: '',
+    scenario: 'registration',
+    conditions: [],
+    channels: [],
+    creativeMode: 'ai',
+    manualLink: '',
+    landingTitle: '',
+    landingSubtitle: '',
+    landingCta: '',
+    landingHighlights: [],
+    benefitIds: [],
+    startDate: '2026-04-01',
+    endDate: '2026-04-30',
+    note: '',
   }
 }
 
 export function ScenariosPage() {
-  const { role, scenarios, createStrategy } = useDemo()
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const initialScenarioId = searchParams.get('scenario')
+  const { createStrategy, role, benefits } = useDemo()
+  const nav = useNavigate()
+  const [step, setStep] = useState(0)
+  const [form, setForm] = useState<StrategyFormValues>(defaultForm)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiDone, setAiDone] = useState(false)
 
-  const [step, setStep] = useState(1)
-  const [selectedScenario, setSelectedScenario] = useState<ScenarioDefinition | null>(
-    () => (initialScenarioId ? scenarios.find((s) => s.id === initialScenarioId) ?? null : null),
-  )
-  const [generating, setGenerating] = useState(false)
-  const [generated, setGenerated] = useState(false)
-  const [form, setForm] = useState<StrategyFormValues | null>(null)
-  const timerRef = useRef<number>(0)
+  const selectedScenario = scenarios.find((s) => s.id === form.scenario)
 
-  useEffect(() => {
-    return () => window.clearTimeout(timerRef.current)
-  }, [])
+  const patch = (partial: Partial<StrategyFormValues>) =>
+    setForm((prev) => ({ ...prev, ...partial }))
 
-  const handleGenerate = useCallback(
-    (scenario: ScenarioDefinition) => {
-      setSelectedScenario(scenario)
-      setGenerating(true)
-      setGenerated(false)
-      timerRef.current = window.setTimeout(() => {
-        setForm(buildInitialForm(scenario))
-        setGenerating(false)
-        setGenerated(true)
-      }, 1600)
-    },
-    [],
-  )
+  const toggleCondition = (c: AudienceCondition) =>
+    patch({
+      conditions: form.conditions.includes(c)
+        ? form.conditions.filter((x) => x !== c)
+        : [...form.conditions, c],
+    })
 
-  const toggleChannel = (ch: ChannelKey) => {
-    if (!form) return
-    setForm({
-      ...form,
+  const toggleChannel = (ch: ChannelKey) =>
+    patch({
       channels: form.channels.includes(ch)
-        ? form.channels.filter((c) => c !== ch)
+        ? form.channels.filter((x) => x !== ch)
         : [...form.channels, ch],
+    })
+
+  const toggleBenefit = (id: string) =>
+    patch({
+      benefitIds: form.benefitIds.includes(id)
+        ? form.benefitIds.filter((x) => x !== id)
+        : [...form.benefitIds, id],
+    })
+
+  const pickScenario = (id: ScenarioKey) => {
+    const sc = scenarios.find((s) => s.id === id)!
+    patch({
+      scenario: id,
+      name: sc.name,
+      conditions: [...sc.defaultConditions],
+      channels: [...sc.defaultChannels],
+      benefitIds: [...sc.defaultBenefitIds],
+      landingTitle: sc.landingTitle,
+      landingSubtitle: sc.landingSubtitle,
+      landingCta: sc.landingCta,
+      landingHighlights: [...sc.landingHighlights],
     })
   }
 
-  const updateHighlight = (index: number, value: string) => {
-    if (!form) return
-    const next = [...form.landingHighlights]
-    next[index] = value
-    setForm({ ...form, landingHighlights: next })
+  const runAi = () => {
+    setAiLoading(true)
+    setTimeout(() => {
+      setAiLoading(false)
+      setAiDone(true)
+    }, 1500)
   }
 
-  const updateBenefit = (index: number, value: string) => {
-    if (!form) return
-    const next = [...form.benefits]
-    next[index] = value
-    setForm({ ...form, benefits: next })
-  }
-
-  const submit = (action: ActivityAction) => {
-    if (!form) return
+  const submit = (action: 'draft' | 'submit' | 'publish') => {
     createStrategy(form, action)
-    navigate('/dashboard')
+    nav('/dashboard')
+  }
+
+  const canNext = () => {
+    if (step === 0) return !!form.scenario
+    if (step === 1) return form.conditions.length > 0 && form.channels.length > 0
+    if (step === 2) return form.creativeMode === 'ai' ? aiDone : form.manualLink.trim().length > 0
+    return form.benefitIds.length > 0
   }
 
   return (
-    <div className="page-stack">
+    <>
       <PageHeader
-        eyebrow="场景策略"
-        title="AI 智能运营策略中心"
-        description="选择运营场景，一键生成 AI 策略 → 自动生成承接页 → 选择触达渠道 → 配置权益发布。"
+        eyebrow="会员中心"
+        title="场景策略"
+        description="选择场景一键生成 AI 策略，自动配置人群、渠道、素材与权益。"
       />
 
-      {/* Wizard Steps Indicator */}
-      <section className="wizard-steps">
-        {stepLabels.map((label, index) => (
-          <button
-            className={
-              index + 1 === step
-                ? 'wizard-step active'
-                : index + 1 < step
-                  ? 'wizard-step completed'
-                  : 'wizard-step'
-            }
-            key={label}
-            onClick={() => {
-              if (index + 1 < step) setStep(index + 1)
-            }}
-            type="button"
-          >
-            <span className="wizard-step-number">{index + 1}</span>
-            <span className="wizard-step-label">{label}</span>
-          </button>
-        ))}
-      </section>
-
-      {/* STEP 1: Scenario Selection + AI Generation */}
-      {step === 1 && (
-        <div className="page-stack">
-          <section className="scenario-pick-grid">
-            {scenarios.map((scenario) => (
-              <button
-                className={
-                  selectedScenario?.id === scenario.id
-                    ? 'scenario-card active'
-                    : 'scenario-card'
-                }
-                key={scenario.id}
-                onClick={() => handleGenerate(scenario)}
-                type="button"
-              >
-                <div className="scenario-card-head">
-                  <span className="scenario-icon">{scenario.icon}</span>
-                  <GoalBadge goal={scenario.goal} />
-                </div>
-                <h2>{scenario.name}</h2>
-                <p>{scenario.description}</p>
-                <div className="scenario-card-footer">
-                  <span className="meta-chip">{scenario.effectTag}</span>
-                  <SegmentBadge segment={scenario.targetSegment} />
-                </div>
-              </button>
-            ))}
-          </section>
-
-          {generating && (
-            <section className="card ai-generating-card">
-              <div className="ai-generating">
-                <div className="ai-dot-pulse">
-                  <span />
-                  <span />
-                  <span />
-                </div>
-                <p>AI 正在分析场景数据，生成运营策略...</p>
-              </div>
-            </section>
-          )}
-
-          {generated && selectedScenario && form && (
-            <section className="card ai-result-card">
-              <PanelTitle
-                title="AI 策略生成完成"
-                helper={`基于「${selectedScenario.name}」场景自动生成以下运营策略`}
-              />
-              <div className="ai-result-grid">
-                <div className="ai-result-item">
-                  <span className="detail-label">目标人群</span>
-                  <strong>{segmentMeta[selectedScenario.targetSegment].label}</strong>
-                  <p>{selectedScenario.aiAudienceDesc}</p>
-                </div>
-                <div className="ai-result-item">
-                  <span className="detail-label">预估覆盖</span>
-                  <strong>{selectedScenario.aiAudienceSize}</strong>
-                  <p>{selectedScenario.effectTag}</p>
-                </div>
-                <div className="ai-result-item full">
-                  <span className="detail-label">AI 运营策略</span>
-                  <p>{selectedScenario.aiStrategy}</p>
-                </div>
-              </div>
-              <div className="form-action-bar">
-                <button
-                  className="action-button primary"
-                  onClick={() => setStep(2)}
-                >
-                  确认策略，下一步
-                </button>
-              </div>
-            </section>
-          )}
-        </div>
-      )}
-
-      {/* STEP 2: AI Audience Strategy + Landing Page */}
-      {step === 2 && form && selectedScenario && (
-        <div className="page-stack">
-          <section className="split-layout">
-            <article className="card form-card">
-              <PanelTitle
-                title="AI 推荐人群策略"
-                helper="AI 已根据场景自动圈选目标人群并生成运营策略，可按需调整。"
-              />
-
-              <div className="ai-audience-summary card narrative-card">
-                <div className="ai-result-grid">
-                  <div className="ai-result-item">
-                    <span className="detail-label">目标人群</span>
-                    <strong>{segmentMeta[form.segment].label}</strong>
-                  </div>
-                  <div className="ai-result-item">
-                    <span className="detail-label">预估覆盖</span>
-                    <strong>{selectedScenario.aiAudienceSize}</strong>
-                  </div>
-                </div>
-                <div className="ai-result-item full">
-                  <span className="detail-label">圈选规则</span>
-                  <p>{selectedScenario.aiAudienceDesc}</p>
-                </div>
-              </div>
-
-              <div className="form-grid" style={{ marginTop: '1rem' }}>
-                <label className="field">
-                  <span>策略名称</span>
-                  <input
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  />
-                </label>
-
-                <label className="field">
-                  <span>承接页标题</span>
-                  <input
-                    value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  />
-                </label>
-
-                <label className="field">
-                  <span>承接页副标题</span>
-                  <textarea
-                    rows={2}
-                    value={form.subtitle}
-                    onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
-                  />
-                </label>
-
-                <label className="field">
-                  <span>CTA 按钮文案</span>
-                  <input
-                    value={form.cta}
-                    onChange={(e) => setForm({ ...form, cta: e.target.value })}
-                  />
-                </label>
-
-                {form.landingHighlights.map((hl, i) => (
-                  <label className="field" key={`hl-${i}`}>
-                    <span>亮点 {i + 1}</span>
-                    <input
-                      value={hl}
-                      onChange={(e) => updateHighlight(i, e.target.value)}
-                    />
-                  </label>
-                ))}
-              </div>
-            </article>
-
-            <article className="card preview-card">
-              <PanelTitle
-                title="承接页预览"
-                helper="AI 自动生成的承接页效果，点击发布后用户将看到此内容。"
-              />
-              <div className="front-preview">
-                <div className="preview-banner">
-                  <div>
-                    <SegmentBadge segment={form.segment} />
-                    <h2>{form.title}</h2>
-                    <p>{form.subtitle}</p>
-                  </div>
-                  <span className="action-button primary">{form.cta}</span>
-                </div>
-                <div className="benefit-card-list">
-                  {form.landingHighlights.map((hl) => (
-                    <div className="benefit-item" key={hl}>
-                      <span className="eyebrow">活动亮点</span>
-                      <strong>{hl}</strong>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </article>
-          </section>
-
-          <div className="wizard-nav-bar">
-            <button className="action-button ghost" onClick={() => setStep(1)}>
-              上一步
-            </button>
-            <button className="action-button primary" onClick={() => setStep(3)}>
-              下一步：选择触达渠道
-            </button>
+      {/* Stepper */}
+      <div className="stepper">
+        {STEPS.map((label, i) => (
+          <div key={i} className={`step ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}>
+            <span className="step-number">{i < step ? '✓' : i + 1}</span>
+            <span className="step-label">{label}</span>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
 
-      {/* STEP 3: Channel Selection */}
-      {step === 3 && form && (
-        <div className="page-stack">
-          <section className="card">
-            <PanelTitle
-              title="多触达渠道覆盖"
-              helper="自由选择触达渠道，AI 已根据场景推荐最优组合，可按需调整。"
+      <div className="wizard-body">
+        {/* ── Step 0: 选择场景 ── */}
+        {step === 0 && (
+          <section className="wizard-section">
+            <h3>选择运营场景</h3>
+            <div className="scenario-select-grid">
+              {scenarios.map((sc) => (
+                <button
+                  key={sc.id}
+                  type="button"
+                  className={`scenario-select-card ${form.scenario === sc.id ? 'selected' : ''}`}
+                  onClick={() => pickScenario(sc.id)}
+                >
+                  <span className="scenario-select-icon">{sc.icon}</span>
+                  <strong>{sc.name}</strong>
+                  <p>{sc.description}</p>
+                  <span className={`badge tone-${scenarioMeta[sc.id].tone}`}>{sc.effectTag}</span>
+                </button>
+              ))}
+              <ComingSoonCard
+                title="更多场景"
+                description="即将支持更多会员运营场景，如签到打卡、积分兑换、等级升级等。"
+              />
+            </div>
+
+            {selectedScenario && (
+              <div className="ai-strategy-block">
+                <div className="ai-strategy-header">
+                  <span className="ai-icon">🤖</span>
+                  <h4>AI 策略推荐</h4>
+                  {!aiDone && (
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={runAi}
+                      disabled={aiLoading}
+                    >
+                      {aiLoading ? '生成中…' : '一键生成 AI 策略'}
+                    </button>
+                  )}
+                  {aiDone && <span className="badge tone-success">已生成</span>}
+                </div>
+                <p className="ai-strategy-text">{selectedScenario.aiStrategy}</p>
+                <div className="ai-strategy-meta">
+                  <span>预估覆盖人群：{selectedScenario.estimatedAudience}</span>
+                  <span>{selectedScenario.effectTag}</span>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── Step 1: 人群 + 渠道 ── */}
+        {step === 1 && (
+          <section className="wizard-section">
+            <h3>人群圈选</h3>
+            <div className="audience-base">
+              <span className="badge tone-amber">88VIP</span>
+              <span className="audience-base-text">基础人群 · 在此基础上叠加条件筛选</span>
+            </div>
+            <div className="condition-grid">
+              {conditionOrder.map((c) => (
+                <label key={c} className={`condition-card ${form.conditions.includes(c) ? 'selected' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={form.conditions.includes(c)}
+                    onChange={() => toggleCondition(c)}
+                  />
+                  <strong>{conditionMeta[c].label}</strong>
+                  <p>{conditionMeta[c].description}</p>
+                </label>
+              ))}
+            </div>
+
+            <h3 style={{ marginTop: 32 }}>渠道选择</h3>
+            <div className="channel-grid">
+              {channelOrder.map((ch) => (
+                <label key={ch} className={`channel-card ${form.channels.includes(ch) ? 'selected' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={form.channels.includes(ch)}
+                    onChange={() => toggleChannel(ch)}
+                  />
+                  <strong>{channelMeta[ch].label}</strong>
+                  <p>{channelMeta[ch].description}</p>
+                </label>
+              ))}
+              <ComingSoonCard
+                title="更多渠道"
+                description="即将支持 Push 推送、站内信、支付宝生活号等更多触达渠道。"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* ── Step 2: 素材配置 ── */}
+        {step === 2 && (
+          <section className="wizard-section">
+            <h3>素材配置</h3>
+            <div className="creative-mode-tabs">
+              <button
+                type="button"
+                className={`creative-mode-tab ${form.creativeMode === 'ai' ? 'active' : ''}`}
+                onClick={() => patch({ creativeMode: 'ai' })}
+              >
+                🤖 AI 自动生成
+              </button>
+              <button
+                type="button"
+                className={`creative-mode-tab ${form.creativeMode === 'manual' ? 'active' : ''}`}
+                onClick={() => patch({ creativeMode: 'manual' })}
+              >
+                🔗 手动配置链接
+              </button>
+            </div>
+
+            {form.creativeMode === 'manual' ? (
+              <div className="creative-manual">
+                <label className="field-label">
+                  投放链接
+                  <input
+                    type="url"
+                    className="field-input"
+                    placeholder="https://..."
+                    value={form.manualLink}
+                    onChange={(e) => patch({ manualLink: e.target.value })}
+                  />
+                </label>
+                <label className="field-label">
+                  投放页标题
+                  <input
+                    type="text"
+                    className="field-input"
+                    value={form.landingTitle}
+                    onChange={(e) => patch({ landingTitle: e.target.value })}
+                  />
+                </label>
+              </div>
+            ) : (
+              <div className="creative-ai">
+                <p className="creative-ai-hint">
+                  基于所选权益，AI 将自动生成投放页面与承接页面素材。生成后可修改文案并下载。
+                </p>
+
+                <div className="creative-preview-grid">
+                  {/* 投放页面 */}
+                  <div className="creative-preview-card">
+                    <h4>投放页面</h4>
+                    <div className="creative-preview-phone">
+                      <div className="phone-screen">
+                        <strong className="phone-title">{form.landingTitle || '投放页标题'}</strong>
+                        <p className="phone-sub">{form.landingSubtitle || '投放页副标题'}</p>
+                        <ul className="phone-highlights">
+                          {form.landingHighlights.map((h, i) => (
+                            <li key={i}>✦ {h}</li>
+                          ))}
+                        </ul>
+                        <button type="button" className="phone-cta">{form.landingCta || 'CTA'}</button>
+                      </div>
+                    </div>
+                    <div className="creative-actions">
+                      <button type="button" className="btn btn-sm btn-outline" onClick={() => patch({
+                        landingTitle: form.landingTitle + '（已编辑）',
+                      })}>编辑文案</button>
+                      <button type="button" className="btn btn-sm btn-outline">下载素材</button>
+                    </div>
+                  </div>
+
+                  {/* 承接页面 */}
+                  <div className="creative-preview-card">
+                    <h4>承接页面</h4>
+                    <div className="creative-preview-phone">
+                      <div className="phone-screen reception">
+                        <strong className="phone-title">欢迎加入会员</strong>
+                        <p className="phone-sub">您已成功注册，以下权益已激活：</p>
+                        <ul className="phone-highlights">
+                          {form.benefitIds.map((bid) => {
+                            const b = initialBenefits.find((x) => x.id === bid)
+                            return b ? <li key={bid}>✦ {b.name}</li> : null
+                          })}
+                        </ul>
+                        <button type="button" className="phone-cta">查看我的权益</button>
+                      </div>
+                    </div>
+                    <div className="creative-actions">
+                      <button type="button" className="btn btn-sm btn-outline">编辑文案</button>
+                      <button type="button" className="btn btn-sm btn-outline">下载素材</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── Step 3: 权益 + 发布 ── */}
+        {step === 3 && (
+          <section className="wizard-section">
+            <h3>权益配置</h3>
+            <p className="wizard-hint">选择本次策略关联的会员权益，已选权益将在投放素材中展示。</p>
+            {benefitCategoryOrder.map((cat) => {
+              const items = benefits.filter((b) => b.category === cat && b.enabled)
+              if (items.length === 0) return null
+              return (
+                <div key={cat} className="benefit-select-group">
+                  <h4>{benefitCategoryMeta[cat].icon} {benefitCategoryMeta[cat].label}</h4>
+                  <div className="benefit-select-list">
+                    {items.map((b) => (
+                      <label key={b.id} className={`benefit-select-card ${form.benefitIds.includes(b.id) ? 'selected' : ''}`}>
+                        <input
+                          type="checkbox"
+                          checked={form.benefitIds.includes(b.id)}
+                          onChange={() => toggleBenefit(b.id)}
+                        />
+                        <div>
+                          <strong>{b.name}</strong>
+                          {b.brand && <span className="benefit-brand">{b.brand}</span>}
+                          <p>{b.description}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+
+            <h3 style={{ marginTop: 32 }}>策略备注</h3>
+            <textarea
+              className="field-textarea"
+              placeholder="填写策略说明（可选）"
+              value={form.note}
+              onChange={(e) => patch({ note: e.target.value })}
+              rows={3}
             />
 
-            <div className="channel-section">
-              <h3>消息渠道</h3>
-              <div className="channel-grid">
-                {channelOrder
-                  .filter((ch) => channelMeta[ch].category === 'message')
-                  .map((ch) => (
-                    <button
-                      className={
-                        form.channels.includes(ch)
-                          ? 'channel-card active'
-                          : 'channel-card'
-                      }
-                      key={ch}
-                      onClick={() => toggleChannel(ch)}
-                      type="button"
-                    >
-                      <div className="channel-card-head">
-                        <strong>{channelMeta[ch].label}</strong>
-                        {form.channels.includes(ch) && (
-                          <span className="status-pill success">已选</span>
-                        )}
-                      </div>
-                      <p>{channelMeta[ch].description}</p>
-                    </button>
-                  ))}
-              </div>
-            </div>
-
-            <div className="channel-section">
-              <h3>平台触点</h3>
-              <div className="channel-grid">
-                {channelOrder
-                  .filter((ch) => channelMeta[ch].category === 'touchpoint')
-                  .map((ch) => (
-                    <button
-                      className={
-                        form.channels.includes(ch)
-                          ? 'channel-card active'
-                          : 'channel-card'
-                      }
-                      key={ch}
-                      onClick={() => toggleChannel(ch)}
-                      type="button"
-                    >
-                      <div className="channel-card-head">
-                        <strong>{channelMeta[ch].label}</strong>
-                        {form.channels.includes(ch) && (
-                          <span className="status-pill success">已选</span>
-                        )}
-                      </div>
-                      <p>{channelMeta[ch].description}</p>
-                    </button>
-                  ))}
-              </div>
-            </div>
-
-            <div className="channel-summary">
-              <span className="detail-label">已选渠道</span>
-              <div className="inline-token-row">
-                {form.channels.map((ch) => (
-                  <span className="subtle-badge" key={ch}>
-                    {channelMeta[ch].label}
-                  </span>
-                ))}
-                {form.channels.length === 0 && (
-                  <span className="meta-chip">请至少选择一个渠道</span>
-                )}
-              </div>
-            </div>
-          </section>
-
-          <div className="wizard-nav-bar">
-            <button className="action-button ghost" onClick={() => setStep(2)}>
-              上一步
-            </button>
-            <button
-              className="action-button primary"
-              onClick={() => setStep(4)}
-              disabled={form.channels.length === 0}
-            >
-              下一步：配置权益
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 4: Benefits Configuration + Publish */}
-      {step === 4 && form && selectedScenario && (
-        <div className="page-stack">
-          <section className="split-layout">
-            <article className="card form-card">
-              <PanelTitle
-                title="为目标人群配置权益"
-                helper="配置面向目标人群的专属权益，促进最终转化。"
-              />
-
-              <div className="form-grid">
-                <label className="field">
-                  <span>权益主题</span>
-                  <input
-                    value={form.benefitTitle}
-                    onChange={(e) =>
-                      setForm({ ...form, benefitTitle: e.target.value })
-                    }
-                  />
-                </label>
-
-                <label className="field">
-                  <span>权益 CTA</span>
-                  <input
-                    value={form.benefitCta}
-                    onChange={(e) =>
-                      setForm({ ...form, benefitCta: e.target.value })
-                    }
-                  />
-                </label>
-
-                {form.benefits.map((b, i) => (
-                  <label className="field" key={`benefit-${i}`}>
-                    <span>权益卡片 {i + 1}</span>
-                    <input
-                      value={b}
-                      onChange={(e) => updateBenefit(i, e.target.value)}
-                    />
-                  </label>
-                ))}
-
-                <div className="form-row">
-                  <label className="field">
-                    <span>生效时间</span>
-                    <input
-                      type="date"
-                      value={form.startDate}
-                      onChange={(e) =>
-                        setForm({ ...form, startDate: e.target.value })
-                      }
-                    />
-                  </label>
-                  <label className="field">
-                    <span>失效时间</span>
-                    <input
-                      type="date"
-                      value={form.endDate}
-                      onChange={(e) =>
-                        setForm({ ...form, endDate: e.target.value })
-                      }
-                    />
-                  </label>
-                </div>
-
-                <label className="field">
-                  <span>运营备注</span>
-                  <textarea
-                    rows={2}
-                    value={form.note}
-                    onChange={(e) => setForm({ ...form, note: e.target.value })}
-                  />
-                </label>
-              </div>
-            </article>
-
-            <article className="card preview-card">
-              <PanelTitle
-                title="策略总览"
-                helper="确认策略配置后即可发布，所有渠道将同步生效。"
-              />
-
-              <div className="strategy-summary">
-                <div className="detail-list">
-                  <div>
-                    <span className="detail-label">运营场景</span>
-                    <div className="inline-token-row">
-                      <GoalBadge goal={form.goal} />
-                      <strong>{selectedScenario.name}</strong>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="detail-label">目标人群</span>
-                    <div className="inline-token-row">
-                      <SegmentBadge segment={form.segment} />
-                      <span>{selectedScenario.aiAudienceSize}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="detail-label">触达渠道</span>
-                    <div className="inline-token-row">
-                      {form.channels.map((ch) => (
-                        <span className="subtle-badge" key={ch}>
-                          {channelMeta[ch].label}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="detail-label">权益配置</span>
-                    <div className="inline-token-row">
-                      {form.benefits.map((b) => (
-                        <span className="subtle-badge" key={b}>
-                          {b}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="detail-label">生效周期</span>
-                    <p>
-                      {form.startDate} 至 {form.endDate}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="detail-label">预估效果</span>
-                    <span className="meta-chip highlight">
-                      {selectedScenario.effectTag}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </article>
-          </section>
-
-          <div className="wizard-nav-bar">
-            <button className="action-button ghost" onClick={() => setStep(3)}>
-              上一步
-            </button>
-            <span className="meta-chip">{roleMeta[role].label}</span>
-
-            {role === 'merchantOperator' && (
-              <button
-                className="action-button secondary"
-                onClick={() => submit('draft')}
-              >
-                保存草稿
-              </button>
-            )}
-
-            {role === 'merchantAdmin' && (
-              <>
-                <button
-                  className="action-button secondary"
-                  onClick={() => submit('submit')}
-                >
-                  提交审核
-                </button>
-                <button
-                  className="action-button primary"
-                  onClick={() => submit('publish')}
-                >
+            <div className="publish-actions">
+              {role !== 'merchantOperator' && (
+                <button type="button" className="btn btn-primary" onClick={() => submit('publish')}>
                   发布策略
                 </button>
-              </>
-            )}
-
-            {role === 'platformOps' && (
-              <button
-                className="action-button primary"
-                onClick={() => submit('publish')}
-              >
-                审核并发布
+              )}
+              {role === 'merchantOperator' && (
+                <button type="button" className="btn btn-primary" onClick={() => submit('submit')}>
+                  提交审核
+                </button>
+              )}
+              <button type="button" className="btn btn-outline" onClick={() => submit('draft')}>
+                保存草稿
               </button>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+            </div>
+          </section>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <div className="wizard-nav">
+        {step > 0 && (
+          <button type="button" className="btn btn-outline" onClick={() => setStep(step - 1)}>
+            上一步
+          </button>
+        )}
+        <div className="wizard-nav-spacer" />
+        {step < STEPS.length - 1 && (
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!canNext()}
+            onClick={() => setStep(step + 1)}
+          >
+            下一步
+          </button>
+        )}
+      </div>
+    </>
   )
 }

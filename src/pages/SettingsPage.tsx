@@ -1,107 +1,80 @@
 import { useDemo } from '../app/useDemo'
-import { brandProfile, roleMeta } from '../data/mockData'
+import { roleMeta, roleOrder, brandProfile } from '../data/mockData'
 import { PageHeader } from '../components/PageHeader'
-import { PanelTitle } from '../components/Primitives'
-
-const permissionRows = [
-  {
-    label: '查看数据',
-    roles: { platformOps: '可用', merchantAdmin: '可用', merchantOperator: '可用' },
-  },
-  {
-    label: '创建策略',
-    roles: { platformOps: '可用', merchantAdmin: '可用', merchantOperator: '可用' },
-  },
-  {
-    label: '编辑权益',
-    roles: { platformOps: '可用', merchantAdmin: '可用', merchantOperator: '可用' },
-  },
-  {
-    label: '提交审核',
-    roles: { platformOps: '可用', merchantAdmin: '可用', merchantOperator: '受限' },
-  },
-  {
-    label: '发布策略',
-    roles: { platformOps: '可用', merchantAdmin: '可用', merchantOperator: '受限' },
-  },
-  {
-    label: '下线策略',
-    roles: { platformOps: '可用', merchantAdmin: '可用', merchantOperator: '受限' },
-  },
-]
 
 export function SettingsPage() {
-  const { role } = useDemo()
+  const { role, setRole } = useDemo()
 
   return (
-    <div className="page-stack">
+    <>
       <PageHeader
-        eyebrow="系统设置"
-        title="品牌信息与权限共管"
-        description="统一查看品牌信息、合作模式与角色分工，明确平台与商家在运营流程中的职责边界。"
+        eyebrow="会员中心"
+        title="系统设置"
+        description="统一管理角色分工与发布权限，确保多角色协同有序。"
       />
 
-      <section className="two-column-grid">
-        <article className="card">
-          <PanelTitle title="品牌信息" helper="围绕希尔顿中国旗舰店管理品牌定位、合作模式与平台角色关系。" />
-          <div className="detail-list">
-            <div>
-              <span className="detail-label">品牌名称</span>
-              <p>{brandProfile.brandName}</p>
-            </div>
-            <div>
-              <span className="detail-label">平台定位</span>
-              <p>{brandProfile.platformName}{brandProfile.proposition}</p>
-            </div>
-            <div>
-              <span className="detail-label">当前合作模式</span>
-              <p>{brandProfile.collaboration}</p>
-            </div>
+      <section className="section">
+        <h3 className="panel-title">品牌信息</h3>
+        <div className="settings-card">
+          <div className="settings-row">
+            <span className="settings-label">平台名称</span>
+            <span>{brandProfile.platformName}</span>
           </div>
-        </article>
-
-        <article className="card narrative-card">
-          <PanelTitle title="当前角色职责" helper="不同角色对应不同运营职责与发布权限，确保平台与商家协同有序。" />
-          <div className="narrative-block">
-            <strong>{roleMeta[role].label}</strong>
-            <p>{roleMeta[role].description}</p>
+          <div className="settings-row">
+            <span className="settings-label">品牌定位</span>
+            <span>{brandProfile.proposition}</span>
           </div>
-          <div className="action-preview-row">
-            {role === 'merchantOperator' ? <span className="action-button primary">保存草稿</span> : null}
-            {role === 'merchantAdmin' ? (
-              <>
-                <span className="action-button secondary">提交审核</span>
-                <span className="action-button primary">发布策略</span>
-              </>
-            ) : null}
-            {role === 'platformOps' ? <span className="action-button primary">审核并发布</span> : null}
+          <div className="settings-row">
+            <span className="settings-label">协作模式</span>
+            <span>{brandProfile.collaboration}</span>
           </div>
-        </article>
+        </div>
       </section>
 
-      <article className="card">
-        <PanelTitle title="权限矩阵" helper="统一管理查看、创建、编辑、审核、发布与下线等关键运营权限。" />
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>权限项</th>
-              <th>飞猪小二</th>
-              <th>商家管理员</th>
-              <th>商家运营</th>
-            </tr>
-          </thead>
-          <tbody>
-            {permissionRows.map((row) => (
-              <tr key={row.label}>
-                <td>{row.label}</td>
-                <td>{row.roles.platformOps}</td>
-                <td>{row.roles.merchantAdmin}</td>
-                <td>{row.roles.merchantOperator}</td>
+      <section className="section">
+        <h3 className="panel-title">角色权限</h3>
+        <div className="role-grid">
+          {roleOrder.map((r) => {
+            const m = roleMeta[r]
+            return (
+              <div
+                key={r}
+                className={`role-card-block ${r === role ? 'active' : ''}`}
+                onClick={() => setRole(r)}
+              >
+                <strong>{m.label}</strong>
+                <p>{m.description}</p>
+                {r === role && <span className="badge tone-success">当前角色</span>}
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      <section className="section">
+        <h3 className="panel-title">权限说明</h3>
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>操作</th>
+                <th>飞猪小二</th>
+                <th>商家管理员</th>
+                <th>商家运营</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </article>
-    </div>
+            </thead>
+            <tbody>
+              <tr><td>创建策略</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>发布策略</td><td>✓</td><td>✓</td><td>—</td></tr>
+              <tr><td>审核策略</td><td>✓</td><td>—</td><td>—</td></tr>
+              <tr><td>权益配置</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>素材管理</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>数据分析</td><td>✓</td><td>✓</td><td>只读</td></tr>
+              <tr><td>系统设置</td><td>✓</td><td>✓</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </>
   )
 }

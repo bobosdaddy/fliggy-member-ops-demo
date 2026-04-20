@@ -1,89 +1,72 @@
 import type { ReactNode } from 'react'
-import { goalMeta, segmentMeta, statusMeta } from '../data/mockData'
-import type { ActivityStatus, Goal, Segment } from '../app/types'
+import { scenarioMeta, conditionMeta, channelMeta, benefitCategoryMeta, statusMeta } from '../data/mockData'
+import type { AudienceCondition, BenefitCategory, ChannelKey, ScenarioKey } from '../app/types'
 
-export function MetricCard({
-  label,
-  value,
-  helper,
-}: {
-  label: string
-  value: string
-  helper: string
-}) {
+/* ───── Badges ───── */
+
+export function ScenarioBadge({ scenario }: { scenario: ScenarioKey }) {
+  const m = scenarioMeta[scenario]
+  return <span className={`badge tone-${m.tone}`}>{m.label}</span>
+}
+
+export function ConditionBadge({ condition }: { condition: AudienceCondition }) {
+  const m = conditionMeta[condition]
+  return <span className="badge tone-muted">{m.label}</span>
+}
+
+export function ChannelBadge({ channel }: { channel: ChannelKey }) {
+  const m = channelMeta[channel]
+  return <span className="badge tone-blue">{m.label}</span>
+}
+
+export function BenefitCategoryBadge({ category }: { category: BenefitCategory }) {
+  const m = benefitCategoryMeta[category]
+  return <span className="badge tone-amber">{m.icon} {m.label}</span>
+}
+
+export function StatusPill({ status }: { status: string }) {
+  const m = statusMeta[status] ?? { label: status, tone: 'muted' }
+  return <span className={`status-pill tone-${m.tone}`}>{m.label}</span>
+}
+
+/* ───── Layout primitives ───── */
+
+export function MetricCard({ label, value, helper }: { label: string; value: string; helper: string }) {
   return (
-    <article className="metric-card card">
+    <div className="metric-card">
       <span className="metric-label">{label}</span>
       <strong className="metric-value">{value}</strong>
-      <p className="metric-helper">{helper}</p>
-    </article>
+      <span className="metric-helper">{helper}</span>
+    </div>
   )
 }
 
-export function GoalBadge({ goal }: { goal: Goal }) {
-  return <span className={`tone-badge ${goalMeta[goal].tone}`}>{goalMeta[goal].label}</span>
+export function PanelTitle({ children }: { children: ReactNode }) {
+  return <h3 className="panel-title">{children}</h3>
 }
 
-export function SegmentBadge({ segment }: { segment: Segment }) {
-  return <span className="subtle-badge">{segmentMeta[segment].short}</span>
-}
-
-export function StatusPill({ status }: { status: ActivityStatus }) {
+export function EmptyState({ message, action }: { message: string; action?: ReactNode }) {
   return (
-    <span className={`status-pill ${statusMeta[status].tone}`}>
-      {statusMeta[status].label}
-    </span>
-  )
-}
-
-export function PanelTitle({
-  title,
-  helper,
-  action,
-}: {
-  title: string
-  helper?: string
-  action?: ReactNode
-}) {
-  return (
-    <div className="panel-title">
-      <div>
-        <h2>{title}</h2>
-        {helper ? <p>{helper}</p> : null}
-      </div>
+    <div className="empty-state">
+      <p>{message}</p>
       {action}
     </div>
   )
 }
 
-export function EmptyState({
-  title,
-  detail,
-}: {
-  title: string
-  detail: string
-}) {
+export function ActionLink({ onClick, label }: { onClick: () => void; label: string }) {
   return (
-    <div className="empty-state">
-      <strong>{title}</strong>
-      <p>{detail}</p>
-    </div>
+    <button type="button" className="link-button" onClick={onClick}>{label}</button>
   )
 }
 
-export function ActionLink({
-  children,
-  tone = 'primary',
-  as = 'button',
-}: {
-  children: ReactNode
-  tone?: 'primary' | 'secondary' | 'ghost'
-  as?: 'button' | 'span'
-}) {
-  const className = tone === 'primary' ? 'action-button primary' : tone === 'secondary' ? 'action-button secondary' : 'action-button ghost'
-  if (as === 'span') {
-    return <span className={className}>{children}</span>
-  }
-
-  return <button className={className}>{children}</button>
+export function ComingSoonCard({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="coming-soon-card">
+      <span className="coming-soon-icon">🚧</span>
+      <h4>{title}</h4>
+      <p>{description}</p>
+      <span className="coming-soon-tag">敬请期待</span>
+    </div>
+  )
 }

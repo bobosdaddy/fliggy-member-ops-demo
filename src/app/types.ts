@@ -1,98 +1,103 @@
 export type Role = 'platformOps' | 'merchantAdmin' | 'merchantOperator'
 
-export type Segment = 'guest' | 'lapsed' | 'potential' | 'silver' | 'gold'
+export type ScenarioKey = 'registration' | 'firstOrder' | 'repurchase'
 
-export type Goal = 'acquisition' | 'recall' | 'upgrade' | 'browseNoBuy' | 'campaign'
+export type AudienceCondition =
+  | 'unregistered'
+  | 'registeredNoOrder'
+  | 'orderUnpaid'
+  | 'orderCancelled'
 
-export type ChannelKey = 'push' | 'sms' | 'inapp' | 'store' | 'detail' | 'center'
+export type ChannelKey = 'sms' | 'wecom' | 'storeMsg'
+
+export type BenefitCategory = 'points' | 'coupon' | 'identity' | 'activity'
 
 export type ActivityStatus = 'draft' | 'pending' | 'running'
 
 export type ActivityAction = 'draft' | 'submit' | 'publish'
 
-export interface SegmentInsight {
-  key: Segment
-  scale: number
-  goal: string
-  strategy: string
-  recommendation: string
-  definition: string
-  defaultBenefits: string[]
-}
+export type CreativeMode = 'manual' | 'ai'
 
-export interface BenefitConfig {
-  segment: Segment
-  title: string
-  subtitle: string
-  cta: string
-  benefitCards: string[]
-  tierNote?: string
-  progressNote?: string
-  updatedAt: string
-}
-
-export interface LandingPageConfig {
-  title: string
-  subtitle: string
-  cta: string
-  highlights: string[]
-}
+export type ReportScope = 'strategy' | 'scenario'
 
 export interface ScenarioDefinition {
-  id: string
-  goal: Goal
+  id: ScenarioKey
   name: string
   icon: string
   description: string
-  targetSegment: Segment
   aiStrategy: string
-  aiAudienceDesc: string
-  aiAudienceSize: string
-  landingPage: LandingPageConfig
-  recommendedChannels: ChannelKey[]
+  estimatedAudience: string
   effectTag: string
-  defaultBenefits: string[]
-  defaultBenefitTitle: string
-  defaultBenefitCta: string
+  defaultConditions: AudienceCondition[]
+  defaultChannels: ChannelKey[]
+  defaultBenefitIds: string[]
+  landingTitle: string
+  landingSubtitle: string
+  landingCta: string
+  landingHighlights: string[]
 }
 
-export interface Activity {
+export interface BenefitItem {
+  id: string
+  category: BenefitCategory
+  name: string
+  description: string
+  brand?: string
+  value?: string
+  enabled: boolean
+}
+
+export interface Creative {
   id: string
   name: string
-  goal: Goal
-  segment: Segment
+  mode: CreativeMode
+  link: string
+  landingTitle: string
+  landingSubtitle: string
+  landingCta: string
+  landingHighlights: string[]
+  benefitIds: string[]
+  updatedAt: string
+}
+
+export interface Strategy {
+  id: string
+  name: string
+  scenario: ScenarioKey
+  conditions: AudienceCondition[]
   channels: ChannelKey[]
+  creative: Creative
+  benefitIds: string[]
+  status: ActivityStatus
   startDate: string
   endDate: string
-  title: string
-  subtitle: string
-  cta: string
   note: string
-  status: ActivityStatus
   updatedAt: string
-  scenarioId?: string
-  landingHighlights?: string[]
-  benefits?: string[]
-  benefitTitle?: string
-  benefitCta?: string
 }
 
 export interface StrategyFormValues {
-  scenarioId: string
   name: string
-  goal: Goal
-  segment: Segment
+  scenario: ScenarioKey
+  conditions: AudienceCondition[]
   channels: ChannelKey[]
+  creativeMode: CreativeMode
+  manualLink: string
+  landingTitle: string
+  landingSubtitle: string
+  landingCta: string
+  landingHighlights: string[]
+  benefitIds: string[]
   startDate: string
   endDate: string
-  title: string
-  subtitle: string
-  cta: string
   note: string
-  landingHighlights: string[]
-  benefits: string[]
-  benefitTitle: string
-  benefitCta: string
+}
+
+export interface PerformanceEntry {
+  strategyId: string
+  exposure: number
+  clicks: number
+  conversions: number
+  gmv: number
 }
 
 export interface AnalyticsMetric {
@@ -106,20 +111,12 @@ export interface ChartDatum {
   value: number
 }
 
-export interface GoalAnalytics {
-  goal: Goal
+export interface ScenarioAnalytics {
+  scenario: ScenarioKey
   summary: AnalyticsMetric[]
   trend: number[]
   funnel: ChartDatum[]
-  contributors: ChartDatum[]
-}
-
-export interface PerformanceEntry {
-  activityId: string
-  exposure: number
-  clicks: number
-  conversions: number
-  gmv: number
+  channelContribution: ChartDatum[]
 }
 
 export interface ToastMessage {
