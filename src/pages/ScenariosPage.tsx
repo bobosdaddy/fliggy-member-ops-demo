@@ -331,26 +331,40 @@ export function ScenariosPage() {
             <h3>策略摘要</h3>
             <div className="strategy-summary-grid">
               <div className="summary-item">
-                <span className="eyebrow">场景</span>
-                <p>{selectedScenario?.icon} {selectedScenario?.name ?? '-'}</p>
+                <span className="summary-icon">🎯</span>
+                <div className="summary-content">
+                  <span className="eyebrow">场景</span>
+                  <p>{selectedScenario?.icon} {selectedScenario?.name ?? '-'}</p>
+                </div>
               </div>
               <div className="summary-item">
-                <span className="eyebrow">覆盖人群</span>
-                <p>88VIP + {form.conditions.map((c) => conditionMeta[c].label).join('、') || '未选择'}</p>
+                <span className="summary-icon">👥</span>
+                <div className="summary-content">
+                  <span className="eyebrow">覆盖人群</span>
+                  <p>88VIP · {form.conditions.map((c) => conditionMeta[c].label).join('、') || '未选择'}</p>
+                </div>
               </div>
               <div className="summary-item">
-                <span className="eyebrow">触达渠道</span>
-                <p>{form.channels.map((ch) => channelMeta[ch].label).join('、') || '未选择'}</p>
+                <span className="summary-icon">📡</span>
+                <div className="summary-content">
+                  <span className="eyebrow">触达渠道</span>
+                  <p>{form.channels.map((ch) => channelMeta[ch].label).join('、') || '未选择'}</p>
+                </div>
               </div>
               <div className="summary-item">
-                <span className="eyebrow">素材模式</span>
-                <p>{form.creativeMode === 'ai' ? '🤖 AI 自动生成' : '🔗 手动配置链接'}</p>
+                <span className="summary-icon">🎨</span>
+                <div className="summary-content">
+                  <span className="eyebrow">素材模式</span>
+                  <p>{form.creativeMode === 'ai' ? '🤖 AI 自动生成' : '🔗 手动配置链接'}</p>
+                </div>
               </div>
             </div>
 
             {/* 权益选择 */}
-            <h3 style={{ marginTop: 24 }}>权益配置</h3>
-            <p className="wizard-hint">选择本次策略关联的会员权益，已选权益将在投放素材中展示。</p>
+            <h3 style={{ marginTop: 28 }}>权益配置</h3>
+            <p className="wizard-hint">
+              选择本次策略关联的会员权益（已选 {form.benefitIds.length} 项），已选权益将在投放素材中展示。
+            </p>
             {benefitCategoryOrder.map((cat) => {
               const items = benefits.filter((b) => b.category === cat && b.enabled)
               if (items.length === 0) return null
@@ -367,8 +381,12 @@ export function ScenariosPage() {
                         />
                         <div>
                           <strong>{b.name}</strong>
-                          {b.brand && <span className="benefit-brand">{b.brand}</span>}
-                          {b.value && <span className="benefit-value">{b.value}</span>}
+                          {(b.brand || b.value) && (
+                            <div className="benefit-meta">
+                              {b.brand && <span className="benefit-brand">{b.brand}</span>}
+                              {b.value && <span className="benefit-value">{b.value}</span>}
+                            </div>
+                          )}
                           <p>{b.description}</p>
                         </div>
                       </label>
@@ -379,7 +397,7 @@ export function ScenariosPage() {
             })}
 
             {/* 投放时间 */}
-            <h3 style={{ marginTop: 24 }}>投放时间</h3>
+            <h3 style={{ marginTop: 28 }}>投放时间</h3>
             <div className="form-row">
               <label className="field-label">
                 开始日期
@@ -402,7 +420,7 @@ export function ScenariosPage() {
             </div>
 
             {/* 策略备注 */}
-            <h3 style={{ marginTop: 24 }}>策略备注</h3>
+            <h3 style={{ marginTop: 28 }}>策略备注</h3>
             <textarea
               className="field-textarea"
               placeholder="填写策略说明（可选）"
@@ -414,16 +432,16 @@ export function ScenariosPage() {
             <div className="publish-actions">
               {role !== 'merchantOperator' && (
                 <button type="button" className="btn btn-primary" onClick={() => submit('publish')}>
-                  发布策略
+                  🚀 发布策略
                 </button>
               )}
               {role === 'merchantOperator' && (
                 <button type="button" className="btn btn-primary" onClick={() => submit('submit')}>
-                  提交审核
+                  📤 提交审核
                 </button>
               )}
               <button type="button" className="btn btn-outline" onClick={() => submit('draft')}>
-                保存草稿
+                💾 保存草稿
               </button>
             </div>
           </section>
