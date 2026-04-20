@@ -24,18 +24,19 @@ import { ComingSoonCard } from '../components/Primitives'
 const STEPS = ['选择场景 · AI 生成', '人群圈选 · 渠道选择', '素材配置', '权益配置 · 发布'] as const
 
 function defaultForm(): StrategyFormValues {
+  const sc = scenarios.find((s) => s.id === 'registration')!
   return {
-    name: '',
+    name: sc.name,
     scenario: 'registration',
-    conditions: [],
-    channels: [],
+    conditions: [...sc.defaultConditions],
+    channels: [...sc.defaultChannels],
     creativeMode: 'ai',
     manualLink: '',
-    landingTitle: '',
-    landingSubtitle: '',
-    landingCta: '',
-    landingHighlights: [],
-    benefitIds: [],
+    landingTitle: sc.landingTitle,
+    landingSubtitle: sc.landingSubtitle,
+    landingCta: sc.landingCta,
+    landingHighlights: [...sc.landingHighlights],
+    benefitIds: [...sc.defaultBenefitIds],
     startDate: '2026-04-01',
     endDate: '2026-04-30',
     note: '',
