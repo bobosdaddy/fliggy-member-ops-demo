@@ -2169,6 +2169,36 @@ h3 { font-size: 13px; font-weight: 600; }
   font-size: 13px;
 }
 
+/* ===== Responsive: 16" MacBook Pro (1728px+) ===== */
+@media (min-width: 1728px) {
+  :root { font-size: 14px; }
+  .content-area { padding: 24px 32px; }
+  .page-stack { gap: 16px; }
+  .section { padding: 20px; margin-bottom: 16px; }
+  .metric-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
+  .metric-card { padding: 16px !important; }
+  .metric-value { font-size: 26px; }
+  .scenario-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .scenario-pick-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+  .scenario-select-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .channel-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .condition-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .benefit-row { padding: 16px; }
+  .role-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .analytics-two-col { gap: 16px; }
+  .creative-preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .data-table th, .data-table td { padding: 10px 14px; font-size: 13px; }
+  .data-table thead th { font-size: 12px; }
+  .wizard-steps { gap: 8px; }
+  .wizard-step { padding: 10px 14px; font-size: 13px; }
+  .stepper { gap: 6px; }
+  .step { padding: 12px 16px; font-size: 13px; }
+  .topbar { padding: 12px 24px; }
+  h1 { font-size: 22px; }
+  .sparkline { height: 120px; }
+  .phone-screen { width: 260px; }
+}
+
 /* ===== Responsive: 13" MacBook Pro (1440px) ===== */
 @media (max-width: 1440px) {
   .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -2177,15 +2207,39 @@ h3 { font-size: 13px; font-weight: 600; }
   .segment-grid, .placement-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .three-column-grid, .story-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .scenario-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .condition-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .channel-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .creative-preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+/* ===== Responsive: 13" MacBook Air / scaled (1280px) ===== */
 @media (max-width: 1280px) {
+  :root { font-size: 12.5px; }
+  .content-area { padding: 12px 14px; }
+  .section { padding: 14px; margin-bottom: 10px; }
+  .page-stack { gap: 10px; }
   .scenario-pick-grid, .scenario-select-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .channel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .metric-card { padding: 10px !important; }
+  .metric-value { font-size: 20px; }
   .three-column-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .analytics-two-col { grid-template-columns: 1fr; }
   .role-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scenario-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .benefit-row { padding: 12px; }
+  .wizard-step { padding: 6px 10px; }
+  .step { padding: 8px 12px; }
+  .topbar { padding: 8px 12px; gap: 8px; }
+  .platform-badge { min-width: 120px; padding: 5px 8px; }
+  .sparkline { height: 80px; }
+  h1 { font-size: 18px; }
+  .sidebar { padding: 10px 6px; }
+  .nav-link { padding: 6px 8px; font-size: 12px; }
+  .nav-token { width: 22px; height: 22px; font-size: 9px; }
+  .brand-card { padding: 8px; gap: 4px; }
+  .sidebar-brand-logo { width: 80px; }
+  .phone-screen { width: 200px; padding: 16px 12px; }
 }
 
 @media (max-width: 1100px) {
