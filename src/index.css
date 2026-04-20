@@ -2199,9 +2199,12 @@ h3 { font-size: 13px; font-weight: 600; }
   h1 { font-size: 22px; }
   .sparkline { height: 120px; }
   .phone-screen { width: 260px; }
+  /* ── Step 3 (权益配置·发布) 宽屏适配 ── */
+  .wizard-body { max-width: 1200px; }
+  .wizard-nav { max-width: 1200px; }
   .strategy-summary-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
   .benefit-select-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .benefit-select-card { min-height: 72px; }
+  .wizard-section .field-textarea { max-width: 640px; }
   .wizard-section .form-row { max-width: 640px; }
   .publish-actions { max-width: 640px; }
 }
