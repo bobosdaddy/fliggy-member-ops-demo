@@ -817,36 +817,6 @@ h3 { font-size: 13px; font-weight: 600; }
   padding: 6px 0;
 }
 
-.toggle-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 8px 2px 3px;
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
-  background: #f3f4f6;
-  color: var(--color-text-secondary);
-  font-size: 12px;
-}
-
-.toggle-switch span {
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-
-.toggle-switch.active {
-  background: #dcfce7;
-  color: #15803d;
-  border-color: #86efac;
-}
-
-.toggle-switch.active span {
-  background: #22c55e;
-}
-
 .mounted-list { max-height: 280px; overflow: auto; }
 
 .mounted-item {

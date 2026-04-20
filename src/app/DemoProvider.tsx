@@ -63,6 +63,11 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     pushToast('权益已保存', '权益内容修改已生效。')
   }
 
+  const addBenefit = (item: BenefitItem) => {
+    setBenefits((cur) => [...cur, item])
+    pushToast('权益已新增', `「${item.name}」已添加到${item.category === 'points' ? '积分奖励' : item.category === 'coupon' ? '优惠券' : item.category === 'identity' ? '会员身份' : '会员活动'}。`)
+  }
+
   const createStrategy = (values: StrategyFormValues, action: ActivityAction) => {
     const id = `str-${Date.now()}`
     const ts = nowStamp()
@@ -122,6 +127,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         benefits,
         toggleBenefit,
         updateBenefit,
+        addBenefit,
         scenarios,
         strategies: strategyList,
         createStrategy,

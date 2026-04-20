@@ -18,6 +18,7 @@ export interface DemoContextValue {
   benefits: BenefitItem[]
   toggleBenefit: (id: string) => void
   updateBenefit: (id: string, patch: Partial<BenefitItem>) => void
+  addBenefit: (item: BenefitItem) => void
   scenarios: ScenarioDefinition[]
   strategies: Strategy[]
   createStrategy: (values: StrategyFormValues, action: ActivityAction) => string
