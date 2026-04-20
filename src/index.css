@@ -1246,6 +1246,18 @@ h3 { font-size: 13px; font-weight: 600; }
   white-space: nowrap;
 }
 
+.nav-section-coming-soon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  margin: 2px 6px;
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+}
+
 /* ===== Badge System ===== */
 .badge {
   display: inline-flex;

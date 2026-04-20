@@ -69,31 +69,41 @@ export function Shell() {
           </div>
         </div>
 
-        {sections.map((section) => (
-          <div className="nav-section" key={section.title}>
-            <span className="nav-section-title">{section.title}</span>
-            <nav className="sidebar-nav">
-              {section.items.map((item) =>
-                item.disabled ? (
-                  <span className="nav-link disabled" key={item.to}>
-                    <span className="nav-token">{item.short}</span>
-                    <span>{item.label}</span>
-                    <span className="coming-soon-tag">敬请期待</span>
-                  </span>
-                ) : (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-                  >
-                    <span className="nav-token">{item.short}</span>
-                    <span>{item.label}</span>
-                  </NavLink>
-                ),
+        {sections.map((section) => {
+          const allDisabled = section.items.every((item) => item.disabled)
+          return (
+            <div className="nav-section" key={section.title}>
+              <span className="nav-section-title">{section.title}</span>
+              {allDisabled ? (
+                <div className="nav-section-coming-soon">
+                  <span className="coming-soon-icon">🔒</span>
+                  <span>敬请期待</span>
+                </div>
+              ) : (
+                <nav className="sidebar-nav">
+                  {section.items.map((item) =>
+                    item.disabled ? (
+                      <span className="nav-link disabled" key={item.to}>
+                        <span className="nav-token">{item.short}</span>
+                        <span>{item.label}</span>
+                        <span className="coming-soon-tag">敬请期待</span>
+                      </span>
+                    ) : (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+                      >
+                        <span className="nav-token">{item.short}</span>
+                        <span>{item.label}</span>
+                      </NavLink>
+                    ),
+                  )}
+                </nav>
               )}
-            </nav>
-          </div>
-        ))}
+            </div>
+          )
+        })}
 
         <div className="sidebar-footnote">
           <span className="eyebrow">共管模式</span>
