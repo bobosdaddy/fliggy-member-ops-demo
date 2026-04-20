@@ -1838,7 +1838,8 @@ h3 { font-size: 13px; font-weight: 600; }
   background: var(--color-primary-light);
 }
 
-.benefit-select-card input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; }
+.benefit-select-card input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; width: auto; }
+.benefit-select-card > div { flex: 1; min-width: 0; }
 .benefit-select-card strong { font-size: 13px; }
 .benefit-select-card p { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
 
