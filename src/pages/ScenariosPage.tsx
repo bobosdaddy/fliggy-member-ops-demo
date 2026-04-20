@@ -324,10 +324,32 @@ export function ScenariosPage() {
           </section>
         )}
 
-        {/* ── Step 3: 权益 + 发布 ── */}
+        {/* ── Step 3: 权益 + 摘要 + 发布 ── */}
         {step === 3 && (
           <section className="wizard-section">
-            <h3>权益配置</h3>
+            {/* 策略摘要 */}
+            <h3>策略摘要</h3>
+            <div className="strategy-summary-grid">
+              <div className="summary-item">
+                <span className="eyebrow">场景</span>
+                <p>{selectedScenario?.icon} {selectedScenario?.name ?? '-'}</p>
+              </div>
+              <div className="summary-item">
+                <span className="eyebrow">覆盖人群</span>
+                <p>88VIP + {form.conditions.map((c) => conditionMeta[c].label).join('、') || '未选择'}</p>
+              </div>
+              <div className="summary-item">
+                <span className="eyebrow">触达渠道</span>
+                <p>{form.channels.map((ch) => channelMeta[ch].label).join('、') || '未选择'}</p>
+              </div>
+              <div className="summary-item">
+                <span className="eyebrow">素材模式</span>
+                <p>{form.creativeMode === 'ai' ? '🤖 AI 自动生成' : '🔗 手动配置链接'}</p>
+              </div>
+            </div>
+
+            {/* 权益选择 */}
+            <h3 style={{ marginTop: 24 }}>权益配置</h3>
             <p className="wizard-hint">选择本次策略关联的会员权益，已选权益将在投放素材中展示。</p>
             {benefitCategoryOrder.map((cat) => {
               const items = benefits.filter((b) => b.category === cat && b.enabled)
@@ -346,6 +368,7 @@ export function ScenariosPage() {
                         <div>
                           <strong>{b.name}</strong>
                           {b.brand && <span className="benefit-brand">{b.brand}</span>}
+                          {b.value && <span className="benefit-value">{b.value}</span>}
                           <p>{b.description}</p>
                         </div>
                       </label>
@@ -355,7 +378,31 @@ export function ScenariosPage() {
               )
             })}
 
-            <h3 style={{ marginTop: 32 }}>策略备注</h3>
+            {/* 投放时间 */}
+            <h3 style={{ marginTop: 24 }}>投放时间</h3>
+            <div className="form-row">
+              <label className="field-label">
+                开始日期
+                <input
+                  type="date"
+                  className="field-input"
+                  value={form.startDate}
+                  onChange={(e) => patch({ startDate: e.target.value })}
+                />
+              </label>
+              <label className="field-label">
+                结束日期
+                <input
+                  type="date"
+                  className="field-input"
+                  value={form.endDate}
+                  onChange={(e) => patch({ endDate: e.target.value })}
+                />
+              </label>
+            </div>
+
+            {/* 策略备注 */}
+            <h3 style={{ marginTop: 24 }}>策略备注</h3>
             <textarea
               className="field-textarea"
               placeholder="填写策略说明（可选）"
