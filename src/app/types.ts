@@ -2,6 +2,16 @@ export type Role = 'platformOps' | 'merchantAdmin' | 'merchantOperator'
 
 export type ScenarioKey = 'registration' | 'firstOrder' | 'promoteOrder' | 'repurchase'
 
+export type AudienceMode = 'ai' | 'manual'
+
+export type AudienceTagKey =
+  | 'hiltonHighIntent'
+  | 'hiltonSearchRecent'
+  | 'luxuryHotelFan'
+  | 'couponResponder'
+  | 'businessTraveler'
+  | 'familyVacationPlanner'
+
 export type AudienceCondition =
   | 'unregistered'
   | 'registeredNoOrder'
@@ -81,6 +91,8 @@ export interface StrategyFormValues {
   conditions: AudienceCondition[]
   channels: ChannelKey[]
   audienceScale: number
+  audienceMode: AudienceMode
+  audienceTags: AudienceTagKey[]
   creativeMode: CreativeMode
   manualLink: string
   landingTitle: string

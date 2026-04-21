@@ -1,5 +1,6 @@
 import type {
   AudienceCondition,
+  AudienceTagKey,
   AnalyticsMetric,
   BenefitCategory,
   BenefitItem,
@@ -25,7 +26,7 @@ export const roleMeta: Record<Role, { label: string; description: string }> = {
 /* ───── Scenario ───── */
 
 export const scenarioMeta: Record<ScenarioKey, { label: string; tone: string }> = {
-  registration: { label: '拉新注册', tone: 'violet' },
+  registration: { label: '希尔顿拉新', tone: 'violet' },
   firstOrder: { label: '首单激活', tone: 'amber' },
   promoteOrder: { label: '促购转化', tone: 'blue' },
   repurchase: { label: '老客复购', tone: 'teal' },
@@ -47,6 +48,48 @@ export const conditionOrder: AudienceCondition[] = [
   'registeredNoOrder',
   'orderUnpaid',
   'orderCancelled',
+]
+
+export const audienceTagMeta: Record<AudienceTagKey, { label: string; description: string; tone: string }> = {
+  hiltonHighIntent: {
+    label: '希尔顿高意向浏览',
+    description: '近 30 天多次浏览希尔顿酒店详情页或会员权益页。',
+    tone: 'violet',
+  },
+  hiltonSearchRecent: {
+    label: '近 7 天搜索希尔顿',
+    description: '近 7 天主动搜索希尔顿品牌酒店，意向度较高。',
+    tone: 'blue',
+  },
+  luxuryHotelFan: {
+    label: '高星酒店偏好',
+    description: '偏好五星及以上酒店，适合高价值会员拉新。',
+    tone: 'teal',
+  },
+  couponResponder: {
+    label: '优惠券敏感用户',
+    description: '对注册券、满减券点击和领取行为明显活跃。',
+    tone: 'amber',
+  },
+  businessTraveler: {
+    label: '商旅常住人群',
+    description: '高频商旅出行，适合希尔顿商旅权益拉新。',
+    tone: 'blue',
+  },
+  familyVacationPlanner: {
+    label: '家庭度假计划用户',
+    description: '偏好周末和节假日家庭度假，适合礼遇型拉新。',
+    tone: 'teal',
+  },
+}
+
+export const audienceTagOrder: AudienceTagKey[] = [
+  'hiltonHighIntent',
+  'hiltonSearchRecent',
+  'luxuryHotelFan',
+  'couponResponder',
+  'businessTraveler',
+  'familyVacationPlanner',
 ]
 
 /* ───── Channel ───── */
@@ -100,12 +143,12 @@ export const initialBenefits: BenefitItem[] = [
 export const scenarios: ScenarioDefinition[] = [
   {
     id: 'registration',
-    name: '会员拉新注册',
+    name: '希尔顿拉新注册',
     icon: '🚀',
-    description: '针对 88VIP 中尚未注册品牌会员的用户，通过专属权益引导快速注册入会，扩大品牌会员规模。',
-    aiStrategy: '基于 88VIP 消费力画像与酒店浏览偏好，筛选高转化潜力的未注册用户，生成个性化注册引导话术与专属入会礼遇。',
+    description: '针对 88VIP 中尚未注册希尔顿会员的用户，通过注册礼券和会员身份权益，优先转化高意向用户入会。',
+    aiStrategy: 'AI 自动圈选 88VIP 且希尔顿未注册会员用户，优先推荐近 30 天浏览希尔顿、点击会员权益页、领券未注册的高意向人群，并自动生成注册激励策略。',
     estimatedAudience: '约 68,000 人',
-    effectTag: '预估注册转化率 22%',
+    effectTag: '预估希尔顿注册转化率 22%',
     defaultConditions: ['unregistered'],
     defaultChannels: ['sms', 'storeMsg'],
     defaultBenefitIds: ['b-coupon-hilton', 'b-points-register', 'b-identity-jinjiang'],

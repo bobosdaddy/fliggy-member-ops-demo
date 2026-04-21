@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDemo } from '../app/useDemo'
 import type {
   AudienceCondition,
+  AudienceTagKey,
   ChannelKey,
   ScenarioKey,
   StrategyFormValues,
@@ -11,6 +12,8 @@ import {
   scenarios,
   conditionMeta,
   conditionOrder,
+  audienceTagMeta,
+  audienceTagOrder,
   channelMeta,
   channelOrder,
   scenarioMeta,
@@ -41,6 +44,26 @@ function getAudienceScaleLabel(scale: number) {
   return '放量扩量'
 }
 
+function getScenarioAudienceDescriptor(scenario?: ScenarioKey) {
+  if (scenario === 'registration') return '88VIP 且希尔顿未注册会员用户'
+  if (scenario === 'firstOrder') return '已注册未下单且近期浏览酒店的会员'
+  if (scenario === 'promoteOrder') return '下单未支付或下单取消的高意向用户'
+  return '近期沉默但具备复购潜力的老客会员'
+}
+
+function getScenarioIntentSignals(scenario?: ScenarioKey) {
+  if (scenario === 'registration') {
+    return ['近 30 天浏览希尔顿', '点击会员权益页', '领券未注册', '高星酒店偏好']
+  }
+  if (scenario === 'promoteOrder') {
+    return ['下单未支付', '取消订单后重访', '高价值房型偏好', '活动页反复浏览']
+  }
+  if (scenario === 'firstOrder') {
+    return ['注册后 7 天未下单', '多次浏览房型', '领券未使用', '价格敏感高响应']
+  }
+  return ['30 天未复购', '活动页停留长', '会员日点击高', '高价值历史订单']
+}
+
 function defaultForm(): StrategyFormValues {
   const sc = scenarios.find((s) => s.id === 'registration')!
   return {
@@ -49,6 +72,8 @@ function defaultForm(): StrategyFormValues {
     conditions: [...sc.defaultConditions],
     channels: [...sc.defaultChannels],
     audienceScale: 100,
+    audienceMode: 'ai',
+    audienceTags: [],
     creativeMode: 'ai',
     manualLink: '',
     landingTitle: sc.landingTitle,
@@ -73,16 +98,25 @@ export function ScenariosPage() {
   const selectedScenario = scenarios.find((s) => s.id === form.scenario)
   const audienceScale = form.audienceScale ?? 100
   const estimatedAudienceBase = parseEstimatedAudience(selectedScenario?.estimatedAudience ?? '0')
-  const projectedAudience = Math.max(0, Math.round((estimatedAudienceBase * audienceScale) / 100))
+  const manualAudienceBase = form.audienceTags.length === 0
+    ? 0
+    : Math.round(estimatedAudienceBase * Math.min(0.34 + form.audienceTags.length * 0.11, 0.82))
+  const effectiveAudienceBase = form.audienceMode === 'manual' ? manualAudienceBase : estimatedAudienceBase
+  const projectedAudience = Math.max(0, Math.round((effectiveAudienceBase * audienceScale) / 100))
   const projectedAudienceLabel = formatAudienceCount(projectedAudience)
   const projectedAudienceTier = getAudienceTierLabel(projectedAudience)
-  const estimatedAudienceTier = getAudienceTierLabel(estimatedAudienceBase)
   const scaleLabel = getAudienceScaleLabel(audienceScale)
+  const audienceDescriptor = getScenarioAudienceDescriptor(selectedScenario?.id)
+  const intentSignals = getScenarioIntentSignals(selectedScenario?.id)
   const selectedBenefitNames = useMemo(
     () => form.benefitIds
       .map((bid) => benefits.find((item) => item.id === bid)?.name)
       .filter((name): name is string => Boolean(name)),
     [benefits, form.benefitIds],
+  )
+  const selectedAudienceTags = useMemo(
+    () => form.audienceTags.map((tag) => audienceTagMeta[tag].label),
+    [form.audienceTags],
   )
   const isCreativeReady = form.creativeMode === 'ai'
     ? aiDone
@@ -96,6 +130,13 @@ export function ScenariosPage() {
       conditions: form.conditions.includes(c)
         ? form.conditions.filter((x) => x !== c)
         : [...form.conditions, c],
+    })
+
+  const toggleAudienceTag = (tag: AudienceTagKey) =>
+    patch({
+      audienceTags: form.audienceTags.includes(tag)
+        ? form.audienceTags.filter((item) => item !== tag)
+        : [...form.audienceTags, tag],
     })
 
   const toggleChannel = (ch: ChannelKey) =>
@@ -120,6 +161,8 @@ export function ScenariosPage() {
       conditions: [...sc.defaultConditions],
       channels: [...sc.defaultChannels],
       audienceScale: 100,
+      audienceMode: 'ai',
+      audienceTags: [],
       benefitIds: [...sc.defaultBenefitIds],
       landingTitle: sc.landingTitle,
       landingSubtitle: sc.landingSubtitle,
@@ -146,12 +189,17 @@ export function ScenariosPage() {
     patch({
       conditions: [...selectedScenario.defaultConditions],
       audienceScale: 100,
+      audienceMode: 'ai',
+      audienceTags: [],
     })
   }
 
   const canNext = () => {
     if (step === 0) return !!form.scenario
-    if (step === 1) return form.conditions.length > 0 && form.channels.length > 0
+    if (step === 1) {
+      const hasAudience = form.audienceMode === 'ai' ? true : form.audienceTags.length > 0
+      return hasAudience && form.channels.length > 0
+    }
     if (step === 2) return form.benefitIds.length > 0
     return isCreativeReady
   }
@@ -218,7 +266,7 @@ export function ScenariosPage() {
                 </div>
                 <p className="ai-strategy-text">{selectedScenario.aiStrategy}</p>
                 <div className="ai-strategy-meta">
-                  <span>AI 圈人 · 预估人群量级：{estimatedAudienceTier}</span>
+                  <span>AI 圈人 · 预估人群量级：{getAudienceTierLabel(estimatedAudienceBase)}</span>
                   <span>预计覆盖：{selectedScenario.estimatedAudience}</span>
                   <span>{selectedScenario.effectTag}</span>
                 </div>
@@ -231,83 +279,200 @@ export function ScenariosPage() {
         {step === 1 && (
           <section className="wizard-section">
             <h3>人群圈选</h3>
+            <div className="audience-mode-tabs">
+              <button
+                type="button"
+                className={`audience-mode-tab ${form.audienceMode === 'ai' ? 'active' : ''}`}
+                onClick={() => patch({
+                  audienceMode: 'ai',
+                  audienceTags: [],
+                  conditions: [...(selectedScenario?.defaultConditions ?? [])],
+                })}
+              >
+                🤖 AI 推荐圈选
+              </button>
+              <button
+                type="button"
+                className={`audience-mode-tab ${form.audienceMode === 'manual' ? 'active' : ''}`}
+                onClick={() => patch({ audienceMode: 'manual', conditions: [] })}
+              >
+                🏷️ 用户标签圈选
+              </button>
+            </div>
+
             <div className="audience-base">
               <span className="badge tone-amber">88VIP</span>
-              <span className="audience-base-text">已一键圈选 88VIP 且符合当前场景条件的人群</span>
+              <span className="audience-base-text">
+                {form.audienceMode === 'ai'
+                  ? `已一键圈选 ${audienceDescriptor}，AI 优先为商家推荐意向度高的用户`
+                  : '已切换为用户标签圈选，商家可组合标签手动筛选目标人群'}
+              </span>
             </div>
 
-            <div className="audience-auto-pick-card">
-              <div className="audience-auto-pick-header">
-                <div>
-                  <span className={`badge tone-${selectedScenario ? scenarioMeta[selectedScenario.id].tone : 'amber'}`}>
-                    {selectedScenario?.name ?? '当前场景'}
-                  </span>
-                  <span className="badge tone-success">系统已完成圈选</span>
+            {form.audienceMode === 'ai' ? (
+              <>
+                <div className="audience-auto-pick-card">
+                  <div className="audience-auto-pick-header">
+                    <div>
+                      <span className={`badge tone-${selectedScenario ? scenarioMeta[selectedScenario.id].tone : 'amber'}`}>
+                        {selectedScenario?.name ?? '当前场景'}
+                      </span>
+                      <span className="badge tone-success">系统已完成圈选</span>
+                    </div>
+                    <button type="button" className="btn btn-sm btn-outline" onClick={resetAudience}>
+                      恢复场景推荐
+                    </button>
+                  </div>
+                  <p className="audience-auto-pick-text">
+                    当前已自动锁定 {audienceDescriptor}。AI 会优先推荐更高意向的用户，帮助商家先触达最有机会完成注册或转化的人群。
+                  </p>
+                  <div className="audience-chip-list">
+                    <span className="badge tone-amber">88VIP</span>
+                    <span className="badge tone-blue">{audienceDescriptor}</span>
+                    <span className="badge tone-success">高意向优先</span>
+                  </div>
+                  <div className="audience-reason-list">
+                    {intentSignals.map((signal) => (
+                      <span key={signal} className="badge tone-muted">{signal}</span>
+                    ))}
+                  </div>
                 </div>
-                <button type="button" className="btn btn-sm btn-outline" onClick={resetAudience}>
-                  恢复场景推荐
-                </button>
-              </div>
-              <p className="audience-auto-pick-text">
-                当前已自动锁定 88VIP 基础人群，并叠加场景条件。你可以继续微调条件或直接调整投放规模。
-              </p>
-              <div className="audience-chip-list">
-                <span className="badge tone-amber">88VIP</span>
-                {form.conditions.map((condition) => (
-                  <span key={condition} className="badge tone-blue">{conditionMeta[condition].label}</span>
-                ))}
-              </div>
-            </div>
 
-            <div className="audience-estimator">
-              <div className="audience-scale-card">
-                <div className="audience-scale-header">
-                  <strong>投放规模</strong>
-                  <span>{audienceScale}% · {scaleLabel}</span>
+                <div className="audience-estimator">
+                  <div className="audience-scale-card">
+                    <div className="audience-scale-header">
+                      <strong>用户规模调节</strong>
+                      <span>{audienceScale}% · {scaleLabel}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={40}
+                      max={140}
+                      step={10}
+                      value={audienceScale}
+                      className="audience-scale-slider"
+                      aria-label="调整投放规模"
+                      onChange={(e) => patch({ audienceScale: Number(e.target.value) })}
+                    />
+                    <div className="audience-scale-marks">
+                      <span>40% 收敛</span>
+                      <span>100% 推荐</span>
+                      <span>140% 放量</span>
+                    </div>
+                    <p className="wizard-hint audience-inline-hint">
+                      当你调小规模时，AI 会优先保留近 30 天行为最活跃、注册意愿更高的用户。
+                    </p>
+                  </div>
+                  <div className="audience-estimate-card">
+                    <span className="eyebrow">AI 圈人 · 预估用户量级</span>
+                    <div className="audience-tier-row">
+                      <span className="badge tone-blue">{projectedAudienceTier}</span>
+                      <span className="badge tone-muted">当前量级 {audienceScale}% </span>
+                    </div>
+                    <strong>{projectedAudienceLabel} 人</strong>
+                    <p>基于 {audienceDescriptor} 实时估算，适合先从高意向用户起投，再逐步放量。</p>
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min={40}
-                  max={140}
-                  step={10}
-                  value={audienceScale}
-                  className="audience-scale-slider"
-                  aria-label="调整投放规模"
-                  onChange={(e) => patch({ audienceScale: Number(e.target.value) })}
-                />
-                <div className="audience-scale-marks">
-                  <span>40% 收敛</span>
-                  <span>100% 推荐</span>
-                  <span>140% 放量</span>
-                </div>
-              </div>
-              <div className="audience-estimate-card">
-                <span className="eyebrow">AI 圈人 · 预估人群量级</span>
-                <div className="audience-tier-row">
-                  <span className="badge tone-blue">{projectedAudienceTier}</span>
-                  <span className="badge tone-muted">当前量级 {audienceScale}% </span>
-                </div>
-                <strong>{projectedAudienceLabel} 人</strong>
-                <p>基于 88VIP 与当前条件实时估算，可按预算、库存与履约能力调整量级。</p>
-              </div>
-            </div>
 
-            <p className="wizard-hint">
-              已按场景推荐默认条件，你也可以继续增减筛选条件，进一步收紧或放宽投放人群。
-            </p>
-            <div className="condition-grid">
-              {conditionOrder.map((c) => (
-                <label key={c} className={`condition-card ${form.conditions.includes(c) ? 'selected' : ''}`}>
-                  <input
-                    type="checkbox"
-                    checked={form.conditions.includes(c)}
-                    onChange={() => toggleCondition(c)}
-                  />
-                  <strong>{conditionMeta[c].label}</strong>
-                  <p>{conditionMeta[c].description}</p>
-                </label>
-              ))}
-            </div>
+                {selectedScenario?.id !== 'registration' && (
+                  <>
+                    <p className="wizard-hint">
+                      已按场景推荐默认条件，你也可以继续增减筛选条件，进一步收紧或放宽投放人群。
+                    </p>
+                    <div className="condition-grid">
+                      {conditionOrder.map((c) => (
+                        <label key={c} className={`condition-card ${form.conditions.includes(c) ? 'selected' : ''}`}>
+                          <input
+                            type="checkbox"
+                            checked={form.conditions.includes(c)}
+                            onChange={() => toggleCondition(c)}
+                          />
+                          <strong>{conditionMeta[c].label}</strong>
+                          <p>{conditionMeta[c].description}</p>
+                        </label>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="audience-manual-card">
+                  <div className="audience-auto-pick-header">
+                    <div>
+                      <span className="badge tone-blue">用户标签圈选</span>
+                      <span className="badge tone-success">商家手动配置</span>
+                    </div>
+                    <button type="button" className="btn btn-sm btn-outline" onClick={resetAudience}>
+                      恢复 AI 圈选
+                    </button>
+                  </div>
+                  <p className="audience-auto-pick-text">
+                    通过用户标签手动圈选目标人群，系统会根据已选标签实时估算可覆盖用户，并保留用户规模调节能力。
+                  </p>
+                  <div className="tag-select-grid">
+                    {audienceTagOrder.map((tag) => (
+                      <label key={tag} className={`tag-select-card ${form.audienceTags.includes(tag) ? 'selected' : ''}`}>
+                        <input
+                          type="checkbox"
+                          checked={form.audienceTags.includes(tag)}
+                          onChange={() => toggleAudienceTag(tag)}
+                        />
+                        <strong>{audienceTagMeta[tag].label}</strong>
+                        <p>{audienceTagMeta[tag].description}</p>
+                      </label>
+                    ))}
+                  </div>
+                  {selectedAudienceTags.length > 0 && (
+                    <div className="audience-chip-list audience-chip-stack">
+                      {selectedAudienceTags.map((label) => (
+                        <span key={label} className="badge tone-blue">{label}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="audience-estimator">
+                  <div className="audience-scale-card">
+                    <div className="audience-scale-header">
+                      <strong>用户规模调节</strong>
+                      <span>{audienceScale}% · {scaleLabel}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={40}
+                      max={140}
+                      step={10}
+                      value={audienceScale}
+                      className="audience-scale-slider"
+                      aria-label="调整投放规模"
+                      onChange={(e) => patch({ audienceScale: Number(e.target.value) })}
+                    />
+                    <div className="audience-scale-marks">
+                      <span>40% 收敛</span>
+                      <span>100% 推荐</span>
+                      <span>140% 放量</span>
+                    </div>
+                    <p className="wizard-hint audience-inline-hint">
+                      先选择标签，再按预算和履约能力调整用户规模。
+                    </p>
+                  </div>
+                  <div className="audience-estimate-card">
+                    <span className="eyebrow">标签圈选 · 预估用户量级</span>
+                    <div className="audience-tier-row">
+                      <span className="badge tone-blue">{projectedAudienceTier}</span>
+                      <span className="badge tone-muted">已选标签 {form.audienceTags.length} 个</span>
+                    </div>
+                    <strong>{projectedAudienceLabel} 人</strong>
+                    <p>
+                      {form.audienceTags.length > 0
+                        ? '系统已根据已选标签估算可覆盖用户量，可继续调节规模后进入下一步。'
+                        : '请选择至少 1 个用户标签，系统才会为你估算可覆盖用户量。'}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
 
             <h3 style={{ marginTop: 32 }}>渠道选择</h3>
             <div className="channel-grid">
@@ -492,8 +657,12 @@ export function ScenariosPage() {
               <div className="summary-item">
                 <span className="summary-icon">👥</span>
                 <div className="summary-content">
-                  <span className="eyebrow">AI 圈人</span>
-                  <p>{projectedAudienceLabel} 人 · 88VIP + {form.conditions.map((c) => conditionMeta[c].label).join('、') || '未选择'}</p>
+                  <span className="eyebrow">圈选人群</span>
+                  <p>
+                    {projectedAudienceLabel} 人 · {form.audienceMode === 'ai'
+                      ? `${audienceDescriptor} · 高意向优先`
+                      : selectedAudienceTags.join('、') || '未选择标签'}
+                  </p>
                 </div>
               </div>
               <div className="summary-item">
