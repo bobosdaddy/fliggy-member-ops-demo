@@ -16,6 +16,7 @@ import {
   audienceTagOrder,
   channelMeta,
   channelOrder,
+  sharedChannelBalance,
   scenarioMeta,
   initialBenefits,
   benefitCategoryMeta,
@@ -487,8 +488,8 @@ export function ScenariosPage() {
                   <p>{channelMeta[ch].description}</p>
                   <div className="channel-budget-row">
                     <span>
-                      <em>余额</em>
-                      <strong>{channelMeta[ch].balance}</strong>
+                      <em>共享余额</em>
+                      <strong>{sharedChannelBalance}</strong>
                     </span>
                     <span>
                       <em>预估花费</em>

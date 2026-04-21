@@ -94,23 +94,22 @@ export const audienceTagOrder: AudienceTagKey[] = [
 
 /* ───── Channel ───── */
 
-export const channelMeta: Record<ChannelKey, { label: string; description: string; balance: string; estimatedCost: string }> = {
+export const sharedChannelBalance = '¥ 54,600'
+
+export const channelMeta: Record<ChannelKey, { label: string; description: string; estimatedCost: string }> = {
   sms: {
     label: '短信',
     description: '通过短信直接触达用户，覆盖面广，适合大促提醒和优惠推送。',
-    balance: '¥ 28,600',
     estimatedCost: '≈ ¥ 5,800',
   },
   wecom: {
     label: '企微',
     description: '通过企业微信私域运营，支持 1 对 1 精准沟通与社群营销。',
-    balance: '¥ 16,200',
     estimatedCost: '≈ ¥ 3,200',
   },
   storeMsg: {
     label: '店铺消息',
     description: '飞猪 App 内店铺消息推送，用户主动查看，点击率高。',
-    balance: '¥ 9,800',
     estimatedCost: '≈ ¥ 1,600',
   },
 }
