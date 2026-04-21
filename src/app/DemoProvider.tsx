@@ -101,7 +101,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
     setStrategyList((cur) => [next, ...cur])
 
-    const base = { registration: 280000, firstOrder: 180000, repurchase: 120000 }[values.scenario]
+    const base = { registration: 280000, firstOrder: 180000, promoteOrder: 145000, repurchase: 120000 }[values.scenario]
     const seq = strategyList.length + 1
     setPerformance((cur) => ({
       ...cur,

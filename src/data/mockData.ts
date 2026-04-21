@@ -27,10 +27,11 @@ export const roleMeta: Record<Role, { label: string; description: string }> = {
 export const scenarioMeta: Record<ScenarioKey, { label: string; tone: string }> = {
   registration: { label: '拉新注册', tone: 'violet' },
   firstOrder: { label: '首单激活', tone: 'amber' },
+  promoteOrder: { label: '促购转化', tone: 'blue' },
   repurchase: { label: '老客复购', tone: 'teal' },
 }
 
-export const scenarioOrder: ScenarioKey[] = ['registration', 'firstOrder', 'repurchase']
+export const scenarioOrder: ScenarioKey[] = ['registration', 'firstOrder', 'promoteOrder', 'repurchase']
 
 /* ───── Audience ───── */
 
@@ -50,10 +51,25 @@ export const conditionOrder: AudienceCondition[] = [
 
 /* ───── Channel ───── */
 
-export const channelMeta: Record<ChannelKey, { label: string; description: string }> = {
-  sms: { label: '短信', description: '通过短信直接触达用户，覆盖面广，适合大促提醒和优惠推送。' },
-  wecom: { label: '企微', description: '通过企业微信私域运营，支持 1 对 1 精准沟通与社群营销。' },
-  storeMsg: { label: '店铺消息', description: '飞猪 App 内店铺消息推送，用户主动查看，点击率高。' },
+export const channelMeta: Record<ChannelKey, { label: string; description: string; balance: string; estimatedCost: string }> = {
+  sms: {
+    label: '短信',
+    description: '通过短信直接触达用户，覆盖面广，适合大促提醒和优惠推送。',
+    balance: '¥ 28,600',
+    estimatedCost: '≈ ¥ 5,800',
+  },
+  wecom: {
+    label: '企微',
+    description: '通过企业微信私域运营，支持 1 对 1 精准沟通与社群营销。',
+    balance: '¥ 16,200',
+    estimatedCost: '≈ ¥ 3,200',
+  },
+  storeMsg: {
+    label: '店铺消息',
+    description: '飞猪 App 内店铺消息推送，用户主动查看，点击率高。',
+    balance: '¥ 9,800',
+    estimatedCost: '≈ ¥ 1,600',
+  },
 }
 
 export const channelOrder: ChannelKey[] = ['sms', 'wecom', 'storeMsg']
@@ -113,6 +129,22 @@ export const scenarios: ScenarioDefinition[] = [
     landingSubtitle: '品牌会员首单预订万豪酒店，满 800 立减 80 元，更有闪促积分翻倍。',
     landingCta: '立即预订',
     landingHighlights: ['万豪满 800 减 80', '闪促积分翻倍', '限时 48 小时有效'],
+  },
+  {
+    id: 'promoteOrder',
+    name: '会员促购转化',
+    icon: '🛍️',
+    description: '针对下单未支付、下单后取消等高意向人群，通过撬动商家权益和限时刺激促进下单转化。',
+    aiStrategy: '基于订单流失节点与取消原因标签，圈选下单未支付、下单后取消的高意向会员，优先投放高感知权益与限时成交提醒，推动即时回流。',
+    estimatedAudience: '约 26,000 人',
+    effectTag: '预估补单转化率 19%',
+    defaultConditions: ['orderUnpaid', 'orderCancelled'],
+    defaultChannels: ['sms', 'wecom'],
+    defaultBenefitIds: ['b-coupon-marriott', 'b-coupon-hilton', 'b-points-flash'],
+    landingTitle: '限时挽回 · 下单即享专属促购权益',
+    landingSubtitle: '针对高意向未成交会员，叠加优惠券与积分激励，促进订单快速转化。',
+    landingCta: '立即补单',
+    landingHighlights: ['取消订单专属补贴', '补单享闪促积分奖励', '限时 2 小时成交加码'],
   },
   {
     id: 'repurchase',
@@ -214,6 +246,28 @@ export const initialStrategies: Strategy[] = [
     note: '面向 30 天以上未复购老客，企微 + 店铺消息组合唤醒。',
     updatedAt: '04.18 14:00',
   },
+  {
+    id: 'str-promote-01',
+    name: '促购转化 · 流失订单挽回',
+    scenario: 'promoteOrder',
+    conditions: ['orderUnpaid', 'orderCancelled'],
+    channels: ['sms', 'wecom'],
+    creative: {
+      id: 'cr-promote-01', name: '促购转化 · 挽回主视觉', mode: 'ai', link: '',
+      landingTitle: '限时挽回 · 下单即享专属促购权益',
+      landingSubtitle: '针对高意向未成交会员，叠加优惠券与积分激励，促进订单快速转化。',
+      landingCta: '立即补单',
+      landingHighlights: ['取消订单专属补贴', '补单享闪促积分奖励', '限时 2 小时成交加码'],
+      benefitIds: ['b-coupon-marriott', 'b-coupon-hilton', 'b-points-flash'],
+      updatedAt: '04.18 16:20',
+    },
+    benefitIds: ['b-coupon-marriott', 'b-coupon-hilton', 'b-points-flash'],
+    status: 'running',
+    startDate: '2026-04-10',
+    endDate: '2026-04-30',
+    note: '面向下单未支付与取消订单会员，短信 + 企微双触达促进回流成交。',
+    updatedAt: '04.18 16:20',
+  },
 ]
 
 /* ───── Performance ───── */
@@ -221,6 +275,7 @@ export const initialStrategies: Strategy[] = [
 export const performanceEntries: Record<string, PerformanceEntry> = {
   'str-reg-01': { strategyId: 'str-reg-01', exposure: 280000, clicks: 42000, conversions: 12680, gmv: 3200000 },
   'str-first-01': { strategyId: 'str-first-01', exposure: 180000, clicks: 28800, conversions: 5420, gmv: 4800000 },
+  'str-promote-01': { strategyId: 'str-promote-01', exposure: 145000, clicks: 26100, conversions: 4680, gmv: 4380000 },
   'str-repurchase-01': { strategyId: 'str-repurchase-01', exposure: 120000, clicks: 21600, conversions: 3860, gmv: 5200000 },
 }
 
@@ -267,6 +322,27 @@ export const analyticsByScenario: Record<ScenarioKey, ScenarioAnalytics> = {
       { label: '企微', value: 48 },
       { label: '短信', value: 35 },
       { label: '店铺消息', value: 17 },
+    ],
+  },
+  promoteOrder: {
+    scenario: 'promoteOrder',
+    summary: [
+      { label: '目标人群', value: '26,000', helper: '下单未支付 + 取消订单会员' },
+      { label: '成功触达', value: '20,400', helper: '触达率 78.5%' },
+      { label: '补单转化', value: '4,680', helper: '补单转化率 22.9%' },
+      { label: 'GMV 贡献', value: '¥438万', helper: '挽回订单贡献 GMV' },
+    ],
+    trend: [20, 24, 28, 33, 37, 43, 51],
+    funnel: [
+      { label: '目标人群', value: 26000 },
+      { label: '成功触达', value: 20400 },
+      { label: '点击补单', value: 9100 },
+      { label: '补单完成', value: 4680 },
+    ],
+    channelContribution: [
+      { label: '短信', value: 41 },
+      { label: '企微', value: 39 },
+      { label: '店铺消息', value: 20 },
     ],
   },
   repurchase: {

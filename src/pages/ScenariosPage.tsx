@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDemo } from '../app/useDemo'
 import type {
@@ -21,7 +21,25 @@ import {
 import { PageHeader } from '../components/PageHeader'
 import { ComingSoonCard } from '../components/Primitives'
 
-const STEPS = ['选择场景 · AI 生成', '人群圈选 · 渠道选择', '素材配置', '权益配置 · 发布'] as const
+const STEPS = ['选择场景 · AI 生成', '人群圈选 · 渠道选择', '权益配置', '素材配置 · 发布'] as const
+
+const parseEstimatedAudience = (value: string) => Number(value.replace(/[^\d]/g, '')) || 0
+
+const formatAudienceCount = (value: number) => new Intl.NumberFormat('zh-CN').format(value)
+
+function getAudienceTierLabel(count: number) {
+  if (count >= 60000) return '高量级'
+  if (count >= 35000) return '中高量级'
+  if (count >= 20000) return '中量级'
+  return '精细量级'
+}
+
+function getAudienceScaleLabel(scale: number) {
+  if (scale <= 60) return '精准收敛'
+  if (scale <= 90) return '平衡覆盖'
+  if (scale <= 110) return '推荐量级'
+  return '放量扩量'
+}
 
 function defaultForm(): StrategyFormValues {
   const sc = scenarios.find((s) => s.id === 'registration')!
@@ -30,6 +48,7 @@ function defaultForm(): StrategyFormValues {
     scenario: 'registration',
     conditions: [...sc.defaultConditions],
     channels: [...sc.defaultChannels],
+    audienceScale: 100,
     creativeMode: 'ai',
     manualLink: '',
     landingTitle: sc.landingTitle,
@@ -52,6 +71,22 @@ export function ScenariosPage() {
   const [aiDone, setAiDone] = useState(false)
 
   const selectedScenario = scenarios.find((s) => s.id === form.scenario)
+  const audienceScale = form.audienceScale ?? 100
+  const estimatedAudienceBase = parseEstimatedAudience(selectedScenario?.estimatedAudience ?? '0')
+  const projectedAudience = Math.max(0, Math.round((estimatedAudienceBase * audienceScale) / 100))
+  const projectedAudienceLabel = formatAudienceCount(projectedAudience)
+  const projectedAudienceTier = getAudienceTierLabel(projectedAudience)
+  const estimatedAudienceTier = getAudienceTierLabel(estimatedAudienceBase)
+  const scaleLabel = getAudienceScaleLabel(audienceScale)
+  const selectedBenefitNames = useMemo(
+    () => form.benefitIds
+      .map((bid) => benefits.find((item) => item.id === bid)?.name)
+      .filter((name): name is string => Boolean(name)),
+    [benefits, form.benefitIds],
+  )
+  const isCreativeReady = form.creativeMode === 'ai'
+    ? aiDone
+    : form.manualLink.trim().length > 0
 
   const patch = (partial: Partial<StrategyFormValues>) =>
     setForm((prev) => ({ ...prev, ...partial }))
@@ -84,6 +119,7 @@ export function ScenariosPage() {
       name: sc.name,
       conditions: [...sc.defaultConditions],
       channels: [...sc.defaultChannels],
+      audienceScale: 100,
       benefitIds: [...sc.defaultBenefitIds],
       landingTitle: sc.landingTitle,
       landingSubtitle: sc.landingSubtitle,
@@ -105,11 +141,19 @@ export function ScenariosPage() {
     nav('/dashboard')
   }
 
+  const resetAudience = () => {
+    if (!selectedScenario) return
+    patch({
+      conditions: [...selectedScenario.defaultConditions],
+      audienceScale: 100,
+    })
+  }
+
   const canNext = () => {
     if (step === 0) return !!form.scenario
     if (step === 1) return form.conditions.length > 0 && form.channels.length > 0
-    if (step === 2) return form.creativeMode === 'ai' ? aiDone : form.manualLink.trim().length > 0
-    return form.benefitIds.length > 0
+    if (step === 2) return form.benefitIds.length > 0
+    return isCreativeReady
   }
 
   return (
@@ -117,7 +161,7 @@ export function ScenariosPage() {
       <PageHeader
         eyebrow="会员中心"
         title="场景策略"
-        description="选择场景一键生成 AI 策略，自动配置人群、渠道、素材与权益。"
+        description="选择场景一键生成 AI 策略，自动配置人群、渠道、权益与素材投放。"
       />
 
       {/* Stepper */}
@@ -174,7 +218,8 @@ export function ScenariosPage() {
                 </div>
                 <p className="ai-strategy-text">{selectedScenario.aiStrategy}</p>
                 <div className="ai-strategy-meta">
-                  <span>预估覆盖人群：{selectedScenario.estimatedAudience}</span>
+                  <span>AI 圈人 · 预估人群量级：{estimatedAudienceTier}</span>
+                  <span>预计覆盖：{selectedScenario.estimatedAudience}</span>
                   <span>{selectedScenario.effectTag}</span>
                 </div>
               </div>
@@ -188,8 +233,68 @@ export function ScenariosPage() {
             <h3>人群圈选</h3>
             <div className="audience-base">
               <span className="badge tone-amber">88VIP</span>
-              <span className="audience-base-text">基础人群 · 在此基础上叠加条件筛选</span>
+              <span className="audience-base-text">已一键圈选 88VIP 且符合当前场景条件的人群</span>
             </div>
+
+            <div className="audience-auto-pick-card">
+              <div className="audience-auto-pick-header">
+                <div>
+                  <span className={`badge tone-${selectedScenario ? scenarioMeta[selectedScenario.id].tone : 'amber'}`}>
+                    {selectedScenario?.name ?? '当前场景'}
+                  </span>
+                  <span className="badge tone-success">系统已完成圈选</span>
+                </div>
+                <button type="button" className="btn btn-sm btn-outline" onClick={resetAudience}>
+                  恢复场景推荐
+                </button>
+              </div>
+              <p className="audience-auto-pick-text">
+                当前已自动锁定 88VIP 基础人群，并叠加场景条件。你可以继续微调条件或直接调整投放规模。
+              </p>
+              <div className="audience-chip-list">
+                <span className="badge tone-amber">88VIP</span>
+                {form.conditions.map((condition) => (
+                  <span key={condition} className="badge tone-blue">{conditionMeta[condition].label}</span>
+                ))}
+              </div>
+            </div>
+
+            <div className="audience-estimator">
+              <div className="audience-scale-card">
+                <div className="audience-scale-header">
+                  <strong>投放规模</strong>
+                  <span>{audienceScale}% · {scaleLabel}</span>
+                </div>
+                <input
+                  type="range"
+                  min={40}
+                  max={140}
+                  step={10}
+                  value={audienceScale}
+                  className="audience-scale-slider"
+                  aria-label="调整投放规模"
+                  onChange={(e) => patch({ audienceScale: Number(e.target.value) })}
+                />
+                <div className="audience-scale-marks">
+                  <span>40% 收敛</span>
+                  <span>100% 推荐</span>
+                  <span>140% 放量</span>
+                </div>
+              </div>
+              <div className="audience-estimate-card">
+                <span className="eyebrow">AI 圈人 · 预估人群量级</span>
+                <div className="audience-tier-row">
+                  <span className="badge tone-blue">{projectedAudienceTier}</span>
+                  <span className="badge tone-muted">当前量级 {audienceScale}% </span>
+                </div>
+                <strong>{projectedAudienceLabel} 人</strong>
+                <p>基于 88VIP 与当前条件实时估算，可按预算、库存与履约能力调整量级。</p>
+              </div>
+            </div>
+
+            <p className="wizard-hint">
+              已按场景推荐默认条件，你也可以继续增减筛选条件，进一步收紧或放宽投放人群。
+            </p>
             <div className="condition-grid">
               {conditionOrder.map((c) => (
                 <label key={c} className={`condition-card ${form.conditions.includes(c) ? 'selected' : ''}`}>
@@ -215,6 +320,16 @@ export function ScenariosPage() {
                   />
                   <strong>{channelMeta[ch].label}</strong>
                   <p>{channelMeta[ch].description}</p>
+                  <div className="channel-budget-row">
+                    <span>
+                      <em>余额</em>
+                      <strong>{channelMeta[ch].balance}</strong>
+                    </span>
+                    <span>
+                      <em>预估花费</em>
+                      <strong>{channelMeta[ch].estimatedCost}</strong>
+                    </span>
+                  </div>
                 </label>
               ))}
               <ComingSoonCard
@@ -225,8 +340,48 @@ export function ScenariosPage() {
           </section>
         )}
 
-        {/* ── Step 2: 素材配置 ── */}
+        {/* ── Step 2: 权益配置 ── */}
         {step === 2 && (
+          <section className="wizard-section">
+            <h3 style={{ marginTop: 28 }}>权益配置</h3>
+            <p className="wizard-hint">
+              先确定本次策略关联的会员权益（已选 {form.benefitIds.length} 项），下一步的投放素材会基于这些权益实时生成。
+            </p>
+            {benefitCategoryOrder.map((cat) => {
+              const items = benefits.filter((b) => b.category === cat && b.enabled)
+              if (items.length === 0) return null
+              return (
+                <div key={cat} className="benefit-select-group">
+                  <h4>{benefitCategoryMeta[cat].icon} {benefitCategoryMeta[cat].label}</h4>
+                  <div className="benefit-select-list">
+                    {items.map((b) => (
+                      <label key={b.id} className={`benefit-select-card ${form.benefitIds.includes(b.id) ? 'selected' : ''}`}>
+                        <input
+                          type="checkbox"
+                          checked={form.benefitIds.includes(b.id)}
+                          onChange={() => toggleBenefit(b.id)}
+                        />
+                        <div>
+                          <strong>{b.name}</strong>
+                          {(b.brand || b.value) && (
+                            <div className="benefit-meta">
+                              {b.brand && <span className="benefit-brand">{b.brand}</span>}
+                              {b.value && <span className="benefit-value">{b.value}</span>}
+                            </div>
+                          )}
+                          <p>{b.description}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </section>
+        )}
+
+        {/* ── Step 3: 素材配置 + 摘要 + 发布 ── */}
+        {step === 3 && (
           <section className="wizard-section">
             <h3>素材配置</h3>
             <div className="creative-mode-tabs">
@@ -271,11 +426,10 @@ export function ScenariosPage() {
             ) : (
               <div className="creative-ai">
                 <p className="creative-ai-hint">
-                  基于所选权益，AI 将自动生成投放页面与承接页面素材。生成后可修改文案并下载。
+                  已基于前一步所选权益生成投放页面与承接页面素材，生成后可继续修改文案并下载。
                 </p>
 
                 <div className="creative-preview-grid">
-                  {/* 投放页面 */}
                   <div className="creative-preview-card">
                     <h4>投放页面</h4>
                     <div className="creative-preview-phone">
@@ -291,14 +445,17 @@ export function ScenariosPage() {
                       </div>
                     </div>
                     <div className="creative-actions">
-                      <button type="button" className="btn btn-sm btn-outline" onClick={() => patch({
-                        landingTitle: form.landingTitle + '（已编辑）',
-                      })}>编辑文案</button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline"
+                        onClick={() => patch({ landingTitle: `${form.landingTitle}（已编辑）` })}
+                      >
+                        编辑文案
+                      </button>
                       <button type="button" className="btn btn-sm btn-outline">下载素材</button>
                     </div>
                   </div>
 
-                  {/* 承接页面 */}
                   <div className="creative-preview-card">
                     <h4>承接页面</h4>
                     <div className="creative-preview-phone">
@@ -322,14 +479,8 @@ export function ScenariosPage() {
                 </div>
               </div>
             )}
-          </section>
-        )}
 
-        {/* ── Step 3: 权益 + 摘要 + 发布 ── */}
-        {step === 3 && (
-          <section className="wizard-section">
-            {/* 策略摘要 */}
-            <h3>策略摘要</h3>
+            <h3 style={{ marginTop: 28 }}>策略摘要</h3>
             <div className="strategy-summary-grid">
               <div className="summary-item">
                 <span className="summary-icon">🎯</span>
@@ -341,8 +492,8 @@ export function ScenariosPage() {
               <div className="summary-item">
                 <span className="summary-icon">👥</span>
                 <div className="summary-content">
-                  <span className="eyebrow">覆盖人群</span>
-                  <p>88VIP · {form.conditions.map((c) => conditionMeta[c].label).join('、') || '未选择'}</p>
+                  <span className="eyebrow">AI 圈人</span>
+                  <p>{projectedAudienceLabel} 人 · 88VIP + {form.conditions.map((c) => conditionMeta[c].label).join('、') || '未选择'}</p>
                 </div>
               </div>
               <div className="summary-item">
@@ -353,6 +504,13 @@ export function ScenariosPage() {
                 </div>
               </div>
               <div className="summary-item">
+                <span className="summary-icon">🎁</span>
+                <div className="summary-content">
+                  <span className="eyebrow">已选权益</span>
+                  <p>{selectedBenefitNames.length > 0 ? selectedBenefitNames.slice(0, 2).join('、') : '未选择'}{selectedBenefitNames.length > 2 ? ` 等 ${selectedBenefitNames.length} 项` : ''}</p>
+                </div>
+              </div>
+              <div className="summary-item">
                 <span className="summary-icon">🎨</span>
                 <div className="summary-content">
                   <span className="eyebrow">素材模式</span>
@@ -360,42 +518,6 @@ export function ScenariosPage() {
                 </div>
               </div>
             </div>
-
-            {/* 权益选择 */}
-            <h3 style={{ marginTop: 28 }}>权益配置</h3>
-            <p className="wizard-hint">
-              选择本次策略关联的会员权益（已选 {form.benefitIds.length} 项），已选权益将在投放素材中展示。
-            </p>
-            {benefitCategoryOrder.map((cat) => {
-              const items = benefits.filter((b) => b.category === cat && b.enabled)
-              if (items.length === 0) return null
-              return (
-                <div key={cat} className="benefit-select-group">
-                  <h4>{benefitCategoryMeta[cat].icon} {benefitCategoryMeta[cat].label}</h4>
-                  <div className="benefit-select-list">
-                    {items.map((b) => (
-                      <label key={b.id} className={`benefit-select-card ${form.benefitIds.includes(b.id) ? 'selected' : ''}`}>
-                        <input
-                          type="checkbox"
-                          checked={form.benefitIds.includes(b.id)}
-                          onChange={() => toggleBenefit(b.id)}
-                        />
-                        <div>
-                          <strong>{b.name}</strong>
-                          {(b.brand || b.value) && (
-                            <div className="benefit-meta">
-                              {b.brand && <span className="benefit-brand">{b.brand}</span>}
-                              {b.value && <span className="benefit-value">{b.value}</span>}
-                            </div>
-                          )}
-                          <p>{b.description}</p>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
 
             {/* 投放时间 */}
             <h3 style={{ marginTop: 28 }}>投放时间</h3>
@@ -432,12 +554,22 @@ export function ScenariosPage() {
 
             <div className="publish-actions">
               {role !== 'merchantOperator' && (
-                <button type="button" className="btn btn-primary" onClick={() => submit('publish')}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => submit('publish')}
+                  disabled={!isCreativeReady}
+                >
                   🚀 发布策略
                 </button>
               )}
               {role === 'merchantOperator' && (
-                <button type="button" className="btn btn-primary" onClick={() => submit('submit')}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => submit('submit')}
+                  disabled={!isCreativeReady}
+                >
                   📤 提交审核
                 </button>
               )}
@@ -445,6 +577,11 @@ export function ScenariosPage() {
                 💾 保存草稿
               </button>
             </div>
+            {!isCreativeReady && (
+              <p className="wizard-hint" style={{ marginTop: 12 }}>
+                完成当前素材配置后才能发布；草稿可随时保存，后续继续补充投放素材。
+              </p>
+            )}
           </section>
         )}
       </div>

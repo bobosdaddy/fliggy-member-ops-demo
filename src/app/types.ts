@@ -1,6 +1,6 @@
 export type Role = 'platformOps' | 'merchantAdmin' | 'merchantOperator'
 
-export type ScenarioKey = 'registration' | 'firstOrder' | 'repurchase'
+export type ScenarioKey = 'registration' | 'firstOrder' | 'promoteOrder' | 'repurchase'
 
 export type AudienceCondition =
   | 'unregistered'
@@ -80,6 +80,7 @@ export interface StrategyFormValues {
   scenario: ScenarioKey
   conditions: AudienceCondition[]
   channels: ChannelKey[]
+  audienceScale: number
   creativeMode: CreativeMode
   manualLink: string
   landingTitle: string
